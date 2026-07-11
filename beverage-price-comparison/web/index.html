@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>饮品比价 · 阿里闪购 / 京东 / 美团</title>
+<style>
+  :root { --bg:#f5f6f8; --card:#fff; --line:#e6e8eb; --brand:#2563eb; --green:#16a34a; --muted:#6b7280; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+         background:var(--bg); color:#1f2328; }
+  header { background:linear-gradient(120deg,#2563eb,#7c3aed); color:#fff; padding:28px 20px; }
+  header h1 { margin:0 0 4px; font-size:22px; }
+  header p { margin:0; opacity:.85; font-size:13px; }
+  .wrap { max-width:960px; margin:0 auto; padding:20px; }
+  .searchbar { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+  .searchbar input[type=text]{ flex:1; min-width:180px; padding:11px 14px; border:1px solid var(--line);
+         border-radius:10px; font-size:15px; }
+  .searchbar button{ padding:11px 20px; background:#fff; color:var(--brand); border:none;
+         border-radius:10px; font-weight:600; cursor:pointer; }
+  .controls{ display:flex; gap:16px; align-items:center; margin:14px 2px; font-size:13px; color:var(--muted); flex-wrap:wrap;}
+  .controls label{ display:flex; gap:6px; align-items:center; cursor:pointer; }
+  .results{ display:grid; gap:10px; }
+  .unit{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; cursor:pointer;
+         transition:.15s; }
+  .unit:hover{ border-color:var(--brand); box-shadow:0 2px 10px rgba(37,99,235,.08); }
+  .unit .name{ font-weight:600; font-size:15px; }
+  .unit .meta{ font-size:12px; color:var(--muted); margin-top:3px; }
+  .tag{ display:inline-block; font-size:11px; padding:1px 7px; border-radius:20px; background:#eef2ff; color:#4338ca; margin-left:6px;}
+  .cmp{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-top:4px; }
+  .cmp h2{ margin:0 0 2px; font-size:17px; }
+  .cmp .sub{ color:var(--muted); font-size:12px; margin-bottom:14px; }
+  .cols{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; }
+  .col{ border:1px solid var(--line); border-radius:12px; padding:14px; position:relative; }
+  .col.best{ border-color:var(--green); box-shadow:0 0 0 2px rgba(22,163,74,.12); }
+  .col .plat{ font-weight:600; font-size:14px; }
+  .col .price{ font-size:26px; font-weight:700; margin:8px 0; }
+  .col .price small{ font-size:13px; font-weight:500; }
+  .best-badge{ position:absolute; top:-10px; right:10px; background:var(--green); color:#fff;
+         font-size:11px; padding:2px 9px; border-radius:20px; }
+  .bd{ font-size:12px; color:#444; border-top:1px dashed var(--line); margin-top:8px; padding-top:8px; }
+  .bd .row{ display:flex; justify-content:space-between; padding:1px 0; }
+  .bd .row.minus{ color:var(--green); }
+  .disabled{ opacity:.55; }
+  .savings{ margin-top:14px; font-size:14px; color:var(--green); font-weight:600; }
+  .empty{ color:var(--muted); text-align:center; padding:30px; }
+  .hint{ font-size:12px; color:var(--muted); margin-top:6px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="padding-top:0;padding-bottom:0;">
+    <h1>🥤 饮品比价</h1>
+    <p>阿里闪购 · 京东 · 美团 —— 搜一款饮品，看三平台到手价</p>
+    <div class="searchbar">
+      <input id="q" type="text" placeholder="试试：可乐 / 农夫山泉 / 元气森林 / 喜茶 / 瑞幸" />
+      <button onclick="doSearch()">搜索</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="controls">
+    <label>数量 <input id="qty" type="number" min="1" max="99" value="1" style="width:56px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;"></label>
+    <label><input id="delivery" type="checkbox" checked> 含配送费</label>
+    <span class="hint">数据为演示用 Mock 数据，非真实价格</span>
+  </div>
+  <div id="results" class="results"></div>
+  <div id="detail"></div>
+</div>
+
+<script>
+const yuan = c => "¥" + (c/100).toFixed(2);
+
+async function doSearch(){
+  const q = document.getElementById('q').value.trim();
+  const r = await fetch('/search?q=' + encodeURIComponent(q));
+  const data = await r.json();
+  const box = document.getElementById('results');
+  document.getElementById('detail').innerHTML = '';
+  if(!data.results.length){ box.innerHTML = '<div class="empty">没搜到，换个关键词试试～</div>'; return; }
+  box.innerHTML = data.results.map(u => `
+    <div class="unit" onclick="doCompare('${u.id}')">
+      <div class="name">${u.name}
+        <span class="tag">${u.type==='made'?'现制':'瓶装'}</span>
+        <span class="tag">${u.platforms.length}个平台</span>
+      </div>
+      <div class="meta">品牌：${u.brand} · 规格：${u.spec} · ${u.platforms.join(' / ')}</div>
+    </div>`).join('');
+}
+
+async function doCompare(id){
+  const qty = document.getElementById('qty').value || 1;
+  const delivery = document.getElementById('delivery').checked;
+  const r = await fetch(`/compare?unit_id=${id}&qty=${qty}&include_delivery=${delivery}`);
+  const d = await r.json();
+  const cols = d.platforms.map(p => `
+    <div class="col ${p.platform===d.cheapest?'best':''} ${p.orderable?'':'disabled'}">
+      ${p.platform===d.cheapest?'<span class="best-badge">最便宜</span>':''}
+      <div class="plat">${p.platform}</div>
+      <div class="price">${p.orderable?yuan(p.final_price):'—'}<small> 到手</small></div>
+      ${p.note?`<div style="font-size:11px;color:#dc2626">${p.note}</div>`:''}
+      <div class="bd">
+        ${p.breakdown.map(b => `<div class="row ${b.amount<0?'minus':''}">
+            <span>${b.label}</span><span>${b.amount<0?'-':''}${yuan(Math.abs(b.amount))}</span></div>`).join('')}
+      </div>
+    </div>`).join('');
+  const savings = (d.savings_vs_max!=null && d.savings_vs_max>0)
+      ? `<div class="savings">✅ 选「${d.cheapest}」最省，比最贵的平台省 ${yuan(d.savings_vs_max)}</div>` : '';
+  document.getElementById('detail').innerHTML = `
+    <div class="cmp">
+      <h2>${d.beverage.name}</h2>
+      <div class="sub">数量 ×${d.quantity} · ${d.include_delivery?'含配送费':'不含配送费'}</div>
+      <div class="cols">${cols}</div>
+      ${savings}
+    </div>`;
+  document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+document.getElementById('q').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+doSearch();  // 首屏展示全部
+</script>
+</body>
+</html>
