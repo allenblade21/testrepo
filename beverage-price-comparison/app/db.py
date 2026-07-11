@@ -23,7 +23,7 @@ def init_db(path: str = ":memory:") -> sqlite3.Connection:
         DROP TABLE IF EXISTS delivery;
         CREATE TABLE listing (
             id INTEGER PRIMARY KEY,
-            platform TEXT, brand TEXT, name TEXT, spec TEXT, type TEXT,
+            platform TEXT, merchant TEXT, brand TEXT, name TEXT, spec TEXT, type TEXT,
             barcode TEXT, list_price INTEGER, sale_price INTEGER
         );
         CREATE TABLE promotion (
@@ -41,10 +41,11 @@ def init_db(path: str = ":memory:") -> sqlite3.Connection:
 
     for row in seed_data.LISTINGS:
         cur.execute(
-            "INSERT INTO listing (platform,brand,name,spec,type,barcode,list_price,sale_price)"
-            " VALUES (?,?,?,?,?,?,?,?)",
-            (row["platform"], row["brand"], row["name"], row["spec"], row["type"],
-             row["barcode"], row["list_price"], row["sale_price"]),
+            "INSERT INTO listing"
+            " (platform,merchant,brand,name,spec,type,barcode,list_price,sale_price)"
+            " VALUES (?,?,?,?,?,?,?,?,?)",
+            (row["platform"], row["merchant"], row["brand"], row["name"], row["spec"],
+             row["type"], row["barcode"], row["list_price"], row["sale_price"]),
         )
         listing_id = cur.lastrowid
         for kind, desc, value, threshold in row.get("promotions", []):
@@ -69,8 +70,9 @@ def load_listings(conn: sqlite3.Connection, platform: str) -> list[Listing]:
         ]
         listings.append(
             Listing(
-                platform=r["platform"], brand=r["brand"], name=r["name"], spec=r["spec"],
-                type=r["type"], list_price=r["list_price"], sale_price=r["sale_price"],
+                platform=r["platform"], merchant=r["merchant"], brand=r["brand"],
+                name=r["name"], spec=r["spec"], type=r["type"],
+                list_price=r["list_price"], sale_price=r["sale_price"],
                 barcode=r["barcode"], promotions=promos,
             )
         )

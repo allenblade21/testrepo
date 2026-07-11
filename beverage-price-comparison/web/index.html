@@ -27,6 +27,7 @@
   .unit .name{ font-weight:600; font-size:15px; }
   .unit .meta{ font-size:12px; color:var(--muted); margin-top:3px; }
   .tag{ display:inline-block; font-size:11px; padding:1px 7px; border-radius:20px; background:#eef2ff; color:#4338ca; margin-left:6px;}
+  .tag.merchant{ background:#fef3c7; color:#92400e; }
   .cmp{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-top:4px; }
   .cmp h2{ margin:0 0 2px; font-size:17px; }
   .cmp .sub{ color:var(--muted); font-size:12px; margin-bottom:14px; }
@@ -53,7 +54,7 @@
     <h1>🥤 饮品比价</h1>
     <p>阿里闪购 · 京东 · 美团 —— 搜一款饮品，看三平台到手价</p>
     <div class="searchbar">
-      <input id="q" type="text" placeholder="试试：可乐 / 农夫山泉 / 元气森林 / 喜茶 / 瑞幸" />
+      <input id="q" type="text" placeholder="试试：可乐 / 永辉 / 罗森 / 元气森林 / 喜茶 / 瑞幸" />
       <button onclick="doSearch()">搜索</button>
     </div>
   </div>
@@ -82,6 +83,7 @@ async function doSearch(){
   box.innerHTML = data.results.map(u => `
     <div class="unit" onclick="doCompare('${u.id}')">
       <div class="name">${u.name}
+        <span class="tag merchant">🏪 ${u.merchant}</span>
         <span class="tag">${u.type==='made'?'现制':'瓶装'}</span>
         <span class="tag">${u.platforms.length}个平台</span>
       </div>
@@ -110,7 +112,7 @@ async function doCompare(id){
   document.getElementById('detail').innerHTML = `
     <div class="cmp">
       <h2>${d.beverage.name}</h2>
-      <div class="sub">数量 ×${d.quantity} · ${d.include_delivery?'含配送费':'不含配送费'}</div>
+      <div class="sub">🏪 ${d.beverage.merchant} · 数量 ×${d.quantity} · ${d.include_delivery?'含配送费':'不含配送费'} · 同商户跨平台比价</div>
       <div class="cols">${cols}</div>
       ${savings}
     </div>`;

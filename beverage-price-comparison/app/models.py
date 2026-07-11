@@ -45,9 +45,14 @@ class Promotion:
 
 @dataclass
 class Listing:
-    """某平台上的一个商品条目。"""
+    """某平台上的一个商品条目。
+
+    ``merchant`` 为售卖该商品的商户（门店），是比价的硬性边界：
+    只有**同一商户**在不同平台上的条目才会被对齐比价。
+    """
 
     platform: str
+    merchant: str
     brand: str
     name: str
     spec: str
@@ -60,9 +65,14 @@ class Listing:
 
 @dataclass
 class ComparableUnit:
-    """跨平台对齐后的「可比饮品单元」——同一款饮品在各平台的条目集合。"""
+    """跨平台对齐后的「可比饮品单元」。
+
+    约束：单元内所有条目必须属于**同一商户**（跨平台的同一家门店）。
+    同款商品由不同商户售卖时，会形成多个独立的可比单元。
+    """
 
     id: str
+    merchant: str
     name: str
     brand: str
     spec: str

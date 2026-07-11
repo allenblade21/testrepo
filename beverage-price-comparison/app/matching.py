@@ -1,6 +1,12 @@
 """跨平台匹配引擎。
 
-把三个平台上代表「同一款饮品」的条目对齐成一个可比饮品单元：
+把三个平台上代表「同一款饮品」的条目对齐成一个可比饮品单元。
+
+**商户约束（硬性规则）**：匹配键始终包含商户。只有同一商户（门店）
+在不同平台上的条目才会归入同一可比单元；同款商品由不同商户售卖时，
+形成多个独立单元，互不比价。
+
+商户内的商品对齐规则：
   - 瓶装标品：有条码 → 按条码精确匹配
   - 现制饮品：无条码 → 按 品牌 + 品名 + 规格 归一化匹配
 
@@ -23,10 +29,18 @@ def _normalize(text: str) -> str:
 
 
 def unit_key(listing: Listing) -> str:
-    """可比单元的自然键。有条码用条码，否则用 品牌|品名|规格。"""
+    """可比单元的自然键：``商户 + 商品``。
+
+    商户是第一段，保证不同商户的同款商品不会被合并比价；
+    第二段有条码用条码，否则用 品牌|品名|规格。
+    """
+    merchant = _normalize(listing.merchant)
     if listing.barcode:
-        return f"barcode:{listing.barcode}"
-    return f"made:{_normalize(listing.brand)}|{_normalize(listing.name)}|{_normalize(listing.spec)}"
+        return f"{merchant}|barcode:{listing.barcode}"
+    return (
+        f"{merchant}|made:"
+        f"{_normalize(listing.brand)}|{_normalize(listing.name)}|{_normalize(listing.spec)}"
+    )
 
 
 def unit_id(listing: Listing) -> str:
@@ -43,9 +57,12 @@ def build_units(listings: list[Listing]) -> list[ComparableUnit]:
     units: list[ComparableUnit] = []
     for uid, group in groups.items():
         rep = group[0]
+        # 商户约束自检：分组键含商户，组内商户必然一致；此处显式断言防回归
+        assert len({_normalize(l.merchant) for l in group}) == 1, "可比单元内出现多个商户"
         units.append(
             ComparableUnit(
                 id=uid,
+                merchant=rep.merchant,
                 name=f"{rep.brand} {rep.name} {rep.spec}".strip(),
                 brand=rep.brand,
                 spec=rep.spec,
@@ -53,8 +70,8 @@ def build_units(listings: list[Listing]) -> list[ComparableUnit]:
                 listings=group,
             )
         )
-    # 覆盖平台多的排前面，便于展示
-    units.sort(key=lambda u: (-len(u.listings), u.name))
+    # 覆盖平台多的排前面，其次按商户、名称，便于展示
+    units.sort(key=lambda u: (-len(u.listings), u.merchant, u.name))
     return units
 
 
@@ -65,8 +82,10 @@ def search_units(units: list[ComparableUnit], query: str) -> list[ComparableUnit
         return units
     hits = []
     for unit in units:
-        haystack = _normalize(unit.name) + "".join(
-            _normalize(l.name + l.brand) for l in unit.listings
+        haystack = (
+            _normalize(unit.name)
+            + _normalize(unit.merchant)
+            + "".join(_normalize(l.name + l.brand + l.merchant) for l in unit.listings)
         )
         if q in haystack:
             hits.append(unit)

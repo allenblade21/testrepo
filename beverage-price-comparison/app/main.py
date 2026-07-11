@@ -43,6 +43,7 @@ _units_by_id = {u.id: u for u in _units}
 def _unit_brief(unit: ComparableUnit) -> dict:
     return {
         "id": unit.id,
+        "merchant": unit.merchant,
         "name": unit.name,
         "brand": unit.brand,
         "spec": unit.spec,
@@ -72,6 +73,10 @@ def compare(
     if unit is None:
         raise HTTPException(status_code=404, detail="未找到该饮品")
 
+    # 商户约束（双保险）：比价的所有条目必须属于同一商户
+    if len({l.merchant for l in unit.listings}) != 1:
+        raise HTTPException(status_code=409, detail="可比单元跨商户，拒绝比价")
+
     platforms = []
     for listing in unit.listings:
         min_order = seed_data.MIN_ORDER.get(listing.platform, 0) if unit.type == "made" else 0
@@ -85,6 +90,7 @@ def compare(
         platforms.append(
             {
                 "platform": result.platform,
+                "merchant": listing.merchant,
                 "final_price": result.final_price,
                 "subtotal": result.subtotal,
                 "discount_total": result.discount_total,
