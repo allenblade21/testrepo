@@ -43,6 +43,24 @@
   .fo-box label{display:flex;gap:5px;align-items:center;cursor:pointer;min-height:28px;}
   .fo-hint{font-size:11.5px;opacity:.75;width:100%;}
 
+  /* 商户直达（聚合查询）板块 */
+  .agg{border:1.5px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 14px;margin:12px 0 4px;}
+  .agg-head{font-size:13px;font-weight:650;color:var(--ink);}
+  .agg-head .hint{font-weight:400;font-size:11.5px;color:var(--muted);margin-left:8px;}
+  .agg input{width:100%;margin-top:8px;padding:9px 12px;font-size:14px;border:1.5px solid var(--line);
+    border-radius:9px;background:var(--bg);color:var(--ink);box-sizing:border-box;}
+  .agg input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+  .mgroup{margin-top:12px;}
+  .mgroup .mname{font-size:13px;font-weight:650;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .mgroup .mcount{font-size:11px;color:var(--muted);font-weight:400;}
+  .plist{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
+  .pchip{font-size:12px;padding:6px 11px;border-radius:99px;border:1px solid var(--line);
+    background:var(--bg);color:var(--ink);cursor:pointer;min-height:32px;}
+  .pchip:hover{border-color:var(--accent);color:var(--accent);}
+  .pchip:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .pchip:focus:not(:focus-visible){outline:none;}
+  .pchip .pn{color:var(--muted);margin-left:4px;font-size:11px;}
+  .agg .empty-m{font-size:12px;color:var(--muted);margin-top:10px;}
   .meta-line{font-size:12px;color:var(--muted);margin:8px 2px 0;}
   .morebtn{padding:9px 26px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface);
     color:var(--accent);font-weight:600;cursor:pointer;min-height:40px;}
@@ -85,7 +103,7 @@
     .head-in,.wrap{padding-left:max(14px, env(safe-area-inset-left));padding-right:max(14px, env(safe-area-inset-right));}
     .head-in{padding-top:16px;padding-bottom:14px;}
     .head-in h1{font-size:18px;}
-    .searchrow input,.controls input[type=number]{font-size:16px;}
+    .searchrow input,.controls input[type=number],.agg input{font-size:16px;}
     .controls label{min-height:44px;}
     .cmp{padding:14px;}
     .col .price{font-size:23px;}
@@ -114,6 +132,12 @@
   <div class="fo-box" id="foBox">
     <b>🎫 每日首单券</b>
     <span class="fo-hint">勾选你今天还没下过单的平台——这些平台可用当日首单券，会计入到手价</span>
+  </div>
+
+  <div class="agg">
+    <div class="agg-head">🏪 商户直达<span class="hint">输入商户名，实时聚合该商户的全部商品</span></div>
+    <input id="mq" type="text" placeholder="如：永辉 / 罗森 / 便利 / 蜜雪冰城 / 星巴克…">
+    <div id="mgroups"></div>
   </div>
 
   <div id="meta" class="meta-line"></div>
@@ -182,6 +206,31 @@ document.getElementById('q').addEventListener('input', function(){
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(function(){ doSearch(); }, 250);
 });
+
+// ===== 商户直达：实时调用聚合 API（防抖 + 过期响应丢弃）=====
+let mqTimer = null, mqSeq = 0;
+document.getElementById('mq').addEventListener('input', function(){
+  clearTimeout(mqTimer);
+  mqTimer = setTimeout(searchMerchants, 250);
+});
+
+async function searchMerchants(){
+  const q = document.getElementById('mq').value.trim();
+  const box = document.getElementById('mgroups');
+  if(!q){ box.innerHTML = ''; return; }        // 空输入收起面板
+  const seq = ++mqSeq;
+  const r = await fetch('/merchants?q=' + encodeURIComponent(q));
+  const data = await r.json();
+  if(seq !== mqSeq) return;                    // 丢弃过期响应
+  if(!data.count){ box.innerHTML = '<div class="empty-m">没有匹配的商户，换个名字试试～</div>'; return; }
+  box.innerHTML = data.merchants.map(g => `
+    <div class="mgroup">
+      <div class="mname">🏪 ${g.merchant}<span class="mcount">${g.product_count} 个可比商品 · 点击直接比价</span></div>
+      <div class="plist">${g.products.map(p => `
+        <button class="pchip" onclick="doCompare('${p.id}')">${p.name}<span class="pn">${p.platforms.length}平台</span></button>`).join('')}
+      </div>
+    </div>`).join('');
+}
 
 async function doCompare(id){
   currentUnit = id;

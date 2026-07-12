@@ -19,7 +19,7 @@ from .adapters.alibaba import AlibabaAdapter
 from .adapters.jd import JDAdapter
 from .adapters.meituan import MeituanAdapter
 from .db import init_db
-from .matching import build_units, search_units
+from .matching import _normalize, build_units, search_units
 from .models import ComparableUnit, Promotion
 from .pricing import compute_price
 
@@ -73,6 +73,38 @@ def search(
         "offset": offset,
         "results": [_unit_brief(u) for u in page],
     }
+
+
+@app.get("/merchants")
+def merchants_aggregate(q: str = Query("", description="商户名关键词，空=全部商户")):
+    """聚合 API：按商户名聚合，返回每个命中商户下的全部商品名列表。
+
+    供界面「商户直达」搜索框实时调用：输入商户名 → 该商户全部可比商品
+    →（点击任一商品进入 /compare 比价）。聚合读取常驻内存单元索引。
+    """
+    nq = _normalize(q)
+    groups: dict[str, list[ComparableUnit]] = {}
+    for u in _units:
+        if not nq or nq in _normalize(u.merchant):
+            groups.setdefault(u.merchant, []).append(u)
+
+    merchants = [
+        {
+            "merchant": m,
+            "product_count": len(us),
+            "products": [
+                {
+                    "id": u.id,
+                    "name": u.name,
+                    "type": u.type,
+                    "platforms": [l.platform for l in u.listings],
+                }
+                for u in sorted(us, key=lambda x: (-len(x.listings), x.name))
+            ],
+        }
+        for m, us in sorted(groups.items(), key=lambda kv: (-len(kv[1]), kv[0]))
+    ]
+    return {"query": q, "count": len(merchants), "merchants": merchants}
 
 
 @app.get("/compare")
