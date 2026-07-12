@@ -76,17 +76,34 @@ def build_units(listings: list[Listing]) -> list[ComparableUnit]:
 
 
 def search_units(units: list[ComparableUnit], query: str) -> list[ComparableUnit]:
-    """按关键词召回可比单元（匹配品牌/品名/各平台标题）。"""
+    """按关键词全库召回可比单元，按相关度排序。
+
+    相关度规则（分值小者靠前）：
+      0 = 品牌或品名前缀命中   1 = 商品名包含   2 = 商户名包含   3 = 其余字段包含
+    同分值内：覆盖平台多者优先（可比性更强）。空查询返回全库（浏览模式）。
+    """
     q = _normalize(query)
     if not q:
         return units
-    hits = []
+
+    scored: list[tuple[int, int, str, ComparableUnit]] = []
     for unit in units:
-        haystack = (
-            _normalize(unit.name)
-            + _normalize(unit.merchant)
-            + "".join(_normalize(l.name + l.brand + l.merchant) for l in unit.listings)
-        )
-        if q in haystack:
-            hits.append(unit)
-    return hits
+        name_n = _normalize(unit.name)
+        brand_n = _normalize(unit.brand)
+        merchant_n = _normalize(unit.merchant)
+        rest = "".join(_normalize(l.name + l.brand + l.merchant) for l in unit.listings)
+        if brand_n.startswith(q) or _normalize(
+            unit.name.replace(unit.brand, "", 1)
+        ).startswith(q):
+            score = 0
+        elif q in name_n:
+            score = 1
+        elif q in merchant_n:
+            score = 2
+        elif q in rest:
+            score = 3
+        else:
+            continue
+        scored.append((score, -len(unit.listings), unit.name, unit))
+    scored.sort(key=lambda t: t[:3])
+    return [t[3] for t in scored]

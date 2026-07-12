@@ -43,6 +43,10 @@
   .fo-box label{display:flex;gap:5px;align-items:center;cursor:pointer;min-height:28px;}
   .fo-hint{font-size:11.5px;opacity:.75;width:100%;}
 
+  .meta-line{font-size:12px;color:var(--muted);margin:8px 2px 0;}
+  .morebtn{padding:9px 26px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface);
+    color:var(--accent);font-weight:600;cursor:pointer;min-height:40px;}
+  .morebtn:hover{border-color:var(--accent);}
   .results{display:grid;gap:9px;margin-top:8px;}
   .unit{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:13px 16px;
     cursor:pointer;text-align:left;width:100%;color:inherit;transition:border-color .12s;}
@@ -112,7 +116,9 @@
     <span class="fo-hint">勾选你今天还没下过单的平台——这些平台可用当日首单券，会计入到手价</span>
   </div>
 
+  <div id="meta" class="meta-line"></div>
   <div id="results" class="results"></div>
+  <div id="more" style="text-align:center;margin-top:10px;"></div>
   <div id="detail"></div>
 
   <footer>到手价 = 售价×数量 − 店铺优惠 − 平台补贴 − 券（含每日首单券）+ 配送费；现制饮品未达起送价时不可下单。<br>
@@ -133,15 +139,11 @@ function foParam(){
   return sel.join(',');
 }
 
-async function doSearch(){
-  const q = document.getElementById('q').value.trim();
-  const r = await fetch('/search?q='+encodeURIComponent(q));
-  const data = await r.json();
-  const box = document.getElementById('results');
-  document.getElementById('detail').innerHTML = '';
-  currentUnit = null;
-  if(!data.results.length){ box.innerHTML='<div class="empty">没搜到，换个关键词试试～</div>'; return; }
-  box.innerHTML = data.results.map(u=>`
+const PAGE = 20;
+let curOffset = 0, curTotal = 0, curQuery = '', searchSeq = 0;
+
+function unitCard(u){
+  return `
     <button class="unit" id="card-${u.id}" onclick="doCompare('${u.id}')">
       <div class="name">${u.name}
         <span class="tag merch">🏪 ${u.merchant}</span>
@@ -149,8 +151,34 @@ async function doSearch(){
         <span class="tag">${u.platforms.length}个平台</span>
       </div>
       <div class="meta">品牌：${u.brand} · 规格：${u.spec} · ${u.platforms.join(' / ')}</div>
-    </button>`).join('');
+    </button>`;
 }
+
+async function doSearch(append){
+  const q = document.getElementById('q').value.trim();
+  if(!append){ curOffset = 0; curQuery = q; document.getElementById('detail').innerHTML=''; currentUnit=null; }
+  const seq = ++searchSeq;   // 丢弃过期响应，防止快速输入时乱序
+  const r = await fetch(`/search?q=${encodeURIComponent(q)}&limit=${PAGE}&offset=${curOffset}`);
+  const data = await r.json();
+  if(seq !== searchSeq) return;
+  curTotal = data.total;
+  const box = document.getElementById('results');
+  const cards = data.results.map(unitCard).join('');
+  if(append){ box.insertAdjacentHTML('beforeend', cards); }
+  else { box.innerHTML = data.results.length ? cards : '<div class="empty">没搜到，换个关键词试试～</div>'; }
+  curOffset += data.count;
+  document.getElementById('meta').textContent =
+    data.total ? `共 ${data.total} 个可比商品${q?`（关键词：${q}）`:'（全部商品库）'}，已显示 ${curOffset} 个` : '';
+  document.getElementById('more').innerHTML =
+    curOffset < curTotal ? `<button class="morebtn" onclick="doSearch(true)">加载更多（还有 ${curTotal-curOffset} 个）</button>` : '';
+}
+
+// 输入即搜（防抖 250ms）
+let debounceTimer = null;
+document.getElementById('q').addEventListener('input', function(){
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(function(){ doSearch(); }, 250);
+});
 
 async function doCompare(id){
   currentUnit = id;

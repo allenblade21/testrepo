@@ -104,3 +104,9 @@ LISTINGS = [
          list_price=1900, sale_price=1780,
          promotions=[("券", "咖啡券减5", 500, 1500)]),
 ]
+
+# 全商户目录（12 家商户 ×263 条上架，由 tools/generate_catalog.py 固定种子生成）
+# 与上面核心 4 家商户合并构成完整产品库，供正式搜索 API 全库检索
+from catalog_data import LISTINGS_EXTRA  # noqa: E402
+
+LISTINGS = LISTINGS + LISTINGS_EXTRA

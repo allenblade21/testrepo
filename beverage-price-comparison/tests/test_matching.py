@@ -97,9 +97,10 @@ def test_api_search_returns_merchant():
     from app.main import app
 
     client = TestClient(app)
-    results = client.get("/search", params={"q": "可乐"}).json()["results"]
-    assert len(results) == 2, "永辉与罗森的可乐应是两个独立可比单元"
-    assert {r["merchant"] for r in results} == {"永辉超市(朝阳店)", "罗森便利店(建国路店)"}
+    results = client.get("/search", params={"q": "可乐", "limit": 100}).json()["results"]
+    # 同一条码的 330ml×6罐 可乐在永辉与罗森必须是两个独立可比单元
+    assert {"永辉超市(朝阳店)", "罗森便利店(建国路店)"} <= {r["merchant"] for r in results}
+    assert all("merchant" in r for r in results)
 
 
 def test_api_compare_single_merchant_only():
@@ -107,12 +108,54 @@ def test_api_compare_single_merchant_only():
     from app.main import app
 
     client = TestClient(app)
-    results = client.get("/search", params={"q": "可乐"}).json()["results"]
+    results = client.get("/search", params={"q": "可乐", "limit": 100}).json()["results"]
+    assert results
     for r in results:
         cmp = client.get("/compare", params={"unit_id": r["id"]}).json()
         merchants = {p["merchant"] for p in cmp["platforms"]}
         assert len(merchants) == 1, "比价结果必须来自同一商户"
         assert cmp["beverage"]["merchant"] in merchants
+
+
+def test_api_search_pagination():
+    """分页：limit/offset 生效、total 稳定、翻页不重不漏。"""
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    p1 = client.get("/search", params={"q": "", "limit": 10, "offset": 0}).json()
+    p2 = client.get("/search", params={"q": "", "limit": 10, "offset": 10}).json()
+    assert p1["total"] == p2["total"] > 20, "全库浏览应远超一页"
+    assert p1["count"] == 10 and p2["count"] == 10
+    ids1 = {r["id"] for r in p1["results"]}
+    ids2 = {r["id"] for r in p2["results"]}
+    assert not ids1 & ids2, "翻页结果不得重复"
+
+
+def test_api_search_relevance_brand_first():
+    """相关度：品牌前缀命中排在商户名命中之前。"""
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    results = client.get("/search", params={"q": "星巴克", "limit": 20}).json()["results"]
+    assert results, "全库应能搜到星巴克"
+    assert all("星巴克" in r["brand"] or "星巴克" in r["merchant"] for r in results)
+    assert "星巴克" in results[0]["brand"], "品牌命中应排最前"
+
+
+def test_api_search_full_catalog_size():
+    """全商户产品库规模：单元数应达到目录级别（>60），覆盖多家商户。"""
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    h = client.get("/health").json()
+    assert h["units"] > 60
+    assert h["listings"] > 200
+    browse = client.get("/search", params={"q": "", "limit": 100}).json()
+    merchants = {r["merchant"] for r in browse["results"]}
+    assert len(merchants) >= 8, "首页浏览应覆盖多家商户"
 
 
 def test_api_endpoints():

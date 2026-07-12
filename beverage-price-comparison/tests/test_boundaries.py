@@ -148,11 +148,12 @@ def test_api_unknown_unit_returns_404():
 
 
 def test_api_whitespace_query_returns_all():
-    """空白查询 → 归一化为空 → 返回全部单元。"""
+    """空白查询 → 归一化为空 → 浏览全库（total=全部单元，分页返回）。"""
     client = _client()
     total = client.get("/health").json()["units"]
     data = client.get("/search", params={"q": "   "}).json()
-    assert data["count"] == total
+    assert data["total"] == total
+    assert data["count"] <= 20  # 默认页大小
 
 
 def test_api_tie_cheapest_deterministic_and_savings_correct():

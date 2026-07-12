@@ -124,7 +124,7 @@ const SCENARIOS = [
 ];
 
 async function findUnit(q, merch){
-  const r = await fetch('/search?q='+encodeURIComponent(q));
+  const r = await fetch('/search?q='+encodeURIComponent(q)+'&limit=100');
   const d = await r.json();
   return d.results.find(u => u.merchant.indexOf(merch)>=0) || d.results[0];
 }

@@ -58,9 +58,21 @@ def health():
 
 
 @app.get("/search")
-def search(q: str = Query("", description="关键词")):
+def search(
+    q: str = Query("", description="关键词（商品名/品牌/商户名，空=浏览全库）"),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+):
+    """全商户产品库搜索：相关度排序 + 分页。"""
     hits = search_units(_units, q)
-    return {"query": q, "count": len(hits), "results": [_unit_brief(u) for u in hits]}
+    page = hits[offset : offset + limit]
+    return {
+        "query": q,
+        "total": len(hits),          # 命中总数
+        "count": len(page),          # 本页返回数
+        "offset": offset,
+        "results": [_unit_brief(u) for u in page],
+    }
 
 
 @app.get("/compare")
