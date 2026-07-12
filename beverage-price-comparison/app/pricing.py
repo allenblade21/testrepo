@@ -12,8 +12,8 @@ from dataclasses import dataclass, field
 from .models import DeliveryPolicy, Listing, Promotion
 
 
-# 优惠参与计算的先后顺序（数字小者先算）
-_KIND_ORDER = {"第二件半价": 0, "满减": 1, "补贴": 2, "券": 3}
+# 优惠参与计算的先后顺序（数字小者先算）。首单券为平台级券，最后参与结算
+_KIND_ORDER = {"第二件半价": 0, "满减": 1, "补贴": 2, "券": 3, "首单券": 4}
 
 
 @dataclass
@@ -48,7 +48,7 @@ def _promotion_discount(promo: Promotion, listing: Listing, quantity: int, curre
         return promo.value if current >= promo.threshold else 0
     if promo.kind == "补贴":
         return min(promo.value, current)
-    if promo.kind == "券":
+    if promo.kind in ("券", "首单券"):
         return promo.value if current >= promo.threshold else 0
     return 0
 
@@ -59,18 +59,25 @@ def compute_price(
     quantity: int = 1,
     include_delivery: bool = True,
     min_order: int = 0,
+    first_order_coupon: Promotion | None = None,
 ) -> PriceResult:
     """计算某平台条目在给定数量下的到手价与明细。
 
     ``min_order`` 为现制饮品起送价（分）；商品小计未达时标记为不可下单。
+    ``first_order_coupon`` 为该平台的每日首单券——用户当日尚未在该平台
+    下过单时由调用方传入，参与结算（排在店铺优惠之后，同样受门槛约束）。
     """
     quantity = max(1, quantity)
     subtotal = listing.sale_price * quantity
     lines = [PriceLine("售价小计", subtotal)]
 
+    promotions = list(listing.promotions)
+    if first_order_coupon is not None:
+        promotions.append(first_order_coupon)
+
     current = subtotal
     discount_total = 0
-    for promo in sorted(listing.promotions, key=lambda p: _KIND_ORDER.get(p.kind, 99)):
+    for promo in sorted(promotions, key=lambda p: _KIND_ORDER.get(p.kind, 99)):
         amount = _promotion_discount(promo, listing, quantity, current)
         # 任何减免不得超过当前应付：防止误配的满减/券把到手价打成负数
         amount = min(amount, current)

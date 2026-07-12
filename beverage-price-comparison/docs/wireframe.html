@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>饮品比价系统 · Wireframe v0.3</title>
+<style>
+  body{margin:0;background:#d8dbde;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
+  .page{width:1600px;height:1000px;background:#fff;margin:24px auto;padding:48px;box-sizing:border-box;position:relative;overflow:hidden;}
+  h1{font-size:30px;margin:0 0 6px;color:#222;}
+  .pagesub{color:#888;font-size:15px;margin-bottom:28px;}
+  .box{border:2px solid #9aa1a7;border-radius:8px;background:#f2f4f5;padding:14px;box-sizing:border-box;}
+  .dash{border-style:dashed;background:#fafbfb;}
+  .lbl{font-size:13px;color:#5a6268;font-weight:600;}
+  .small{font-size:12px;color:#8a9298;}
+  .bar{background:#e2e6e8;border-radius:6px;height:18px;}
+  .btn{background:#6b7c85;color:#fff;border-radius:8px;padding:10px 26px;font-size:14px;font-weight:600;display:inline-block;}
+  .pill{border:1.5px solid #9aa1a7;border-radius:99px;padding:4px 14px;font-size:12px;color:#5a6268;display:inline-block;margin-right:8px;background:#fff;}
+  .anno{position:absolute;background:#2b6cb0;color:#fff;font-size:12.5px;padding:8px 12px;border-radius:8px;max-width:260px;line-height:1.5;}
+  .anno:before{content:"▶";position:absolute;left:-14px;top:8px;color:#2b6cb0;font-size:12px;}
+  .row{display:flex;gap:14px;}
+  .col{flex:1;}
+  table{border-collapse:collapse;width:100%;font-size:12px;color:#5a6268;}
+  th,td{border:1px solid #c4cacf;padding:6px 10px;text-align:left;}
+  th{background:#e8ebed;}
+  .arrow{color:#9aa1a7;font-size:22px;text-align:center;margin:6px 0;}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ 第1页 · 入口架构总览 ═══════════ -->
+<div class="page" data-document-role="page" data-label="入口架构总览">
+  <h1>饮品比价系统 · 双入口架构</h1>
+  <div class="pagesub">v0.3 Wireframe · 阿里闪购 / 京东 / 美团 · 同商户比价 + 每日首单券</div>
+  <div class="row" style="height:420px;">
+    <div class="box col" style="border-color:#2b6cb0;border-width:3px;">
+      <div class="lbl" style="font-size:18px;">入口 1 · 测试 + 报表控制台</div>
+      <div class="small" style="margin:6px 0 14px;">路由：GET /test → web/test.html（内部使用）</div>
+      <div class="box dash" style="margin-bottom:10px;"><span class="lbl">系统状态卡</span><span class="small">　可比单元 / 平台条目 / 场景通过率 / 服务状态</span></div>
+      <div class="box dash" style="margin-bottom:10px;"><span class="lbl">自动化场景报表</span><span class="small">　加载即对真实 API 执行 S1–S9，输出 PASS/FAIL 表</span></div>
+      <div class="box dash"><span class="lbl">交互测试台</span><span class="small">　场景一键载入 · 首单券/商户筛选 · /compare 原始 JSON</span></div>
+    </div>
+    <div class="box col" style="border-color:#0d7f8c;border-width:3px;">
+      <div class="lbl" style="font-size:18px;">入口 2 · 正式客户使用界面</div>
+      <div class="small" style="margin:6px 0 14px;">路由：GET / → web/app.html（面向最终用户，无测试元素）</div>
+      <div class="box dash" style="margin-bottom:10px;"><span class="lbl">搜索</span><span class="small">　商品名 / 商户名关键词</span></div>
+      <div class="box dash" style="margin-bottom:10px;"><span class="lbl">比价条件</span><span class="small">　数量 · 含配送费 · 🎫 每日首单券（三平台勾选，默认全勾）</span></div>
+      <div class="box dash"><span class="lbl">比价结果</span><span class="small">　同商户三平台并排 · 到手价明细（含首单券行）· 最优高亮 · 节省金额</span></div>
+    </div>
+  </div>
+  <div class="arrow">▼　两个入口共用同一套后端　▼</div>
+  <div class="row">
+    <div class="box col"><div class="lbl">FastAPI 接口层</div><div class="small">/search · /compare（qty, include_delivery, first_order）· /health</div></div>
+    <div class="box col"><div class="lbl">业务引擎</div><div class="small">匹配引擎（商户+商品键）· 到手价引擎（优惠顺序+封顶+首单券）</div></div>
+    <div class="box col"><div class="lbl">平台适配层（可插拔）</div><div class="small">阿里闪购 / 京东 / 美团 Adapter（Mock → 未来真实数据源）</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ 第2页 · 客户界面（桌面） ═══════════ -->
+<div class="page" data-document-role="page" data-label="入口2 · 客户界面（桌面）">
+  <h1>入口 2 · 正式客户界面 — 桌面</h1>
+  <div class="pagesub">GET /　·　web/app.html</div>
+  <div class="box" style="padding:20px;margin-bottom:14px;">
+    <div class="row" style="align-items:center;">
+      <div><div class="lbl" style="font-size:16px;">🥤 饮品比价</div><div class="small">同一家商户的同一款饮品，走哪个平台下单更便宜</div></div>
+      <div class="col" style="max-width:520px;margin-left:auto;display:flex;gap:8px;">
+        <div class="bar" style="flex:1;height:40px;border:1.5px solid #9aa1a7;background:#fff;"></div>
+        <div class="btn">搜索</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-bottom:10px;"><span class="pill">数量 [ 1 ]</span><span class="pill">☑ 含配送费</span></div>
+  <div class="box" style="background:#f3e9f8;border-color:#7c3f9d;margin-bottom:14px;">
+    <span class="lbl" style="color:#7c3f9d;">🎫 每日首单券</span>
+    <span class="pill">☑ 阿里闪购</span><span class="pill">☑ 京东</span><span class="pill">☑ 美团</span>
+    <span class="small">　勾选今天还没下过单的平台 → 该平台享首单券，计入到手价</span>
+  </div>
+  <div class="box dash" style="margin-bottom:14px;">
+    <span class="lbl">可比单元卡片</span>　<span class="pill">🏪 商户标签</span><span class="pill">瓶装/现制</span><span class="pill">N个平台</span>
+    <div class="small" style="margin-top:6px;">品牌 · 规格 · 覆盖平台列表（点击进入比价）</div>
+  </div>
+  <div class="box" style="padding:18px;">
+    <div class="lbl" style="margin-bottom:4px;">比价面板　—　商品名 + 🏪商户 · 数量 · 口径 · 首单券生效平台</div>
+    <div class="row" style="margin-top:10px;">
+      <div class="box col" style="border-color:#0e8a45;border-width:3px;position:relative;">
+        <span style="position:absolute;top:-12px;right:12px;background:#0e8a45;color:#fff;border-radius:99px;padding:2px 10px;font-size:11px;">最便宜</span>
+        <div class="lbl">阿里闪购</div>
+        <div style="font-size:26px;font-weight:800;color:#5a6268;">¥12.90 <span class="small">到手</span></div>
+        <div class="small" style="border-top:1px dashed #c4cacf;margin-top:8px;padding-top:6px;">
+          售价小计 ¥13.90<br>🎫 每日首单减4 −¥4.00<br>配送费 +¥3.00</div>
+      </div>
+      <div class="box col">
+        <div class="lbl">京东</div>
+        <div style="font-size:26px;font-weight:800;color:#5a6268;">¥13.90 <span class="small">到手</span></div>
+        <div class="small" style="border-top:1px dashed #c4cacf;margin-top:8px;padding-top:6px;">
+          售价小计 ¥12.90<br>平台补贴 −¥1.00<br>🎫 每日首单减3 −¥3.00<br>配送费 +¥5.00</div>
+      </div>
+      <div class="box col">
+        <div class="lbl">美团</div>
+        <div style="font-size:26px;font-weight:800;color:#5a6268;">¥19.50 <span class="small">到手</span></div>
+        <div class="small" style="border-top:1px dashed #c4cacf;margin-top:8px;padding-top:6px;">
+          售价小计 ¥14.50<br>（首单券门槛¥15未达，不生效）<br>配送费 +¥5.00</div>
+      </div>
+    </div>
+    <div class="small" style="color:#0e8a45;font-weight:700;margin-top:10px;">✅ 选「阿里闪购」最省，比最贵的平台省 ¥6.60</div>
+  </div>
+  <div class="anno" style="top:300px;right:40px;">首单券是平台级、随用户当日状态变化的输入——所以放在比价条件区，改动即时重算</div>
+  <div class="anno" style="top:640px;right:40px;">明细逐行透明：首单券行带 🎫 标识；未达门槛的平台明确提示原因</div>
+</div>
+
+<!-- ═══════════ 第3页 · 客户界面（手机） ═══════════ -->
+<div class="page" data-document-role="page" data-label="入口2 · 客户界面（手机）">
+  <h1>入口 2 · 正式客户界面 — 手机（≤480px）</h1>
+  <div class="pagesub">同一页面响应式：平台卡竖排 · 输入16px防iOS缩放 · 44px触控目标 · safe-area</div>
+  <div style="display:flex;gap:60px;">
+    <div class="box" style="width:390px;height:780px;border-radius:28px;border-width:3px;padding:18px;">
+      <div class="lbl">🥤 饮品比价</div>
+      <div style="display:flex;gap:6px;margin:10px 0;">
+        <div class="bar" style="flex:1;height:38px;border:1.5px solid #9aa1a7;background:#fff;"></div>
+        <div class="btn" style="padding:8px 16px;">搜索</div>
+      </div>
+      <div style="margin-bottom:8px;"><span class="pill">数量[1]</span><span class="pill">☑配送</span></div>
+      <div class="box" style="background:#f3e9f8;border-color:#7c3f9d;padding:8px;margin-bottom:10px;">
+        <span class="small" style="color:#7c3f9d;">🎫 ☑阿里 ☑京东 ☑美团</span>
+      </div>
+      <div class="box dash" style="margin-bottom:8px;padding:10px;"><span class="small">商品卡 🏪商户 · 3平台</span></div>
+      <div class="box" style="border-color:#0e8a45;border-width:2.5px;margin-bottom:8px;padding:10px;">
+        <div class="small"><b>阿里闪购 · ¥12.90</b> 最便宜<br>明细…</div>
+      </div>
+      <div class="box" style="padding:10px;margin-bottom:8px;"><div class="small">京东 · ¥13.90<br>明细…</div></div>
+      <div class="box" style="padding:10px;"><div class="small">美团 · ¥19.50<br>明细…</div></div>
+    </div>
+    <div>
+      <div class="box dash" style="width:520px;margin-bottom:14px;"><div class="lbl">响应式规则</div>
+        <div class="small">· ≤480px：三平台比价卡由横排 grid 改为单列竖排<br>
+        · ≤640px：输入框字号提至 16px（iOS 聚焦不放大页面）<br>
+        · 触控目标 ≥44px；touch-action 消除点按延迟<br>
+        · 刘海屏 safe-area-inset 左右留边<br>
+        · 兼容基线：Chrome/Edge≥85 · Firefox≥80 · Safari/iOS≥13 · 微信内置</div>
+      </div>
+      <div class="box dash" style="width:520px;"><div class="lbl">状态与降级</div>
+        <div class="small">· 未达起送价 → 该平台卡灰显 + 红字原因，不参与最优评选<br>
+        · 缺货平台 → 单元只显示可得平台（2平台可比）<br>
+        · 首单券未达门槛 → 明细不出现券行（不误导）</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ 第4页 · 测试+报表控制台 ═══════════ -->
+<div class="page" data-document-role="page" data-label="入口1 · 测试+报表控制台">
+  <h1>入口 1 · 测试 + 报表控制台</h1>
+  <div class="pagesub">GET /test　·　web/test.html　·　内部入口（开发 / 测试 / 运营）</div>
+  <div class="box" style="background:#3a4750;margin-bottom:14px;"><span class="lbl" style="color:#fff;">🧪 测试与报表控制台</span>
+    <span class="pill" style="background:#5a6a74;color:#dfe7ea;border:none;">内部入口 · Mock数据</span>
+    <span class="small" style="color:#9fd6df;float:right;">→ 客户界面　|　API文档(/docs)</span></div>
+  <div class="row" style="margin-bottom:14px;">
+    <div class="box col"><div style="font-size:24px;font-weight:800;color:#5a6268;">6</div><div class="small">可比单元</div></div>
+    <div class="box col"><div style="font-size:24px;font-weight:800;color:#5a6268;">15</div><div class="small">平台条目</div></div>
+    <div class="box col" style="border-color:#0e8a45;"><div style="font-size:24px;font-weight:800;color:#0e8a45;">9/9</div><div class="small">场景报表通过</div></div>
+    <div class="box col"><div style="font-size:24px;font-weight:800;color:#5a6268;">ok</div><div class="small">服务状态</div></div>
+  </div>
+  <div class="box" style="margin-bottom:14px;">
+    <div class="lbl" style="margin-bottom:8px;">自动化场景报表（加载即执行）</div>
+    <table>
+      <tr><th>场景</th><th>说明</th><th>参数</th><th>期望最优</th><th>实际最优</th><th>期望价</th><th>实际价</th><th>结果</th></tr>
+      <tr><td>S1</td><td>永辉·可乐×1 三平台</td><td>×1</td><td>阿里闪购</td><td>阿里闪购</td><td>¥16.90</td><td>¥16.90</td><td style="color:#0e8a45;font-weight:700;">PASS</td></tr>
+      <tr><td>S5</td><td>瑞幸×1 美团起送拦截</td><td>×1</td><td>阿里闪购</td><td>阿里闪购</td><td>¥19.90</td><td>¥19.90</td><td style="color:#0e8a45;font-weight:700;">PASS</td></tr>
+      <tr><td>S8</td><td>首单券全开：美团门槛未达</td><td>×1·🎫</td><td>阿里闪购</td><td>阿里闪购</td><td>¥12.90</td><td>¥12.90</td><td style="color:#0e8a45;font-weight:700;">PASS</td></tr>
+      <tr><td>S9</td><td>首单券×2件：美团反超</td><td>×2·🎫</td><td>美团</td><td>美团</td><td>¥21.75</td><td>¥21.75</td><td style="color:#0e8a45;font-weight:700;">PASS</td></tr>
+      <tr><td colspan="8" style="color:#8a9298;">… S2–S4 / S6–S7 同表（共9行）</td></tr>
+    </table>
+  </div>
+  <div class="box dash">
+    <div class="lbl" style="margin-bottom:8px;">交互测试台</div>
+    <div style="margin-bottom:8px;"><span class="pill">S1</span><span class="pill">S2</span><span class="pill">…</span><span class="pill">S9</span><span class="small">场景一键载入</span></div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <div class="bar" style="flex:1;height:34px;border:1.5px solid #9aa1a7;background:#fff;"></div>
+      <div class="btn" style="padding:7px 16px;">执行比价</div>
+    </div>
+    <div style="margin-bottom:8px;"><span class="pill">数量</span><span class="pill">☑配送</span><span class="pill" style="border-color:#7c3f9d;color:#7c3f9d;">🎫 □阿里 □京东 □美团</span><span class="pill">商户筛选</span></div>
+    <div class="box" style="background:#22303a;height:90px;"><span class="small" style="color:#9fd6df;">// /compare 原始 JSON 返回（调试用）</span></div>
+  </div>
+  <div class="anno" style="top:430px;right:40px;">报表即测试：页面加载对真实 API 跑全部场景，任何回归立即可见——这就是"报表界面"的核心</div>
+</div>
+
+</body>
+</html>

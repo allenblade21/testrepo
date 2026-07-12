@@ -20,7 +20,7 @@ from .adapters.jd import JDAdapter
 from .adapters.meituan import MeituanAdapter
 from .db import init_db
 from .matching import build_units, search_units
-from .models import ComparableUnit
+from .models import ComparableUnit, Promotion
 from .pricing import compute_price
 
 app = FastAPI(title="饮品比价系统", version="0.1.0")
@@ -68,6 +68,7 @@ def compare(
     unit_id: str,
     qty: int = Query(1, ge=1, le=99),
     include_delivery: bool = True,
+    first_order: str = Query("", description="当日尚未下过单的平台，逗号分隔；这些平台享每日首单券"),
 ):
     unit = _units_by_id.get(unit_id)
     if unit is None:
@@ -77,15 +78,23 @@ def compare(
     if len({l.merchant for l in unit.listings}) != 1:
         raise HTTPException(status_code=409, detail="可比单元跨商户，拒绝比价")
 
+    first_order_set = {p.strip() for p in first_order.split(",") if p.strip()}
+
     platforms = []
     for listing in unit.listings:
         min_order = seed_data.MIN_ORDER.get(listing.platform, 0) if unit.type == "made" else 0
+        coupon = None
+        if listing.platform in first_order_set:
+            cfg = seed_data.FIRST_ORDER_COUPON.get(listing.platform)
+            if cfg:
+                coupon = Promotion(kind="首单券", desc=cfg[0], value=cfg[1], threshold=cfg[2])
         result = compute_price(
             listing,
             _delivery[listing.platform],
             quantity=qty,
             include_delivery=include_delivery,
             min_order=min_order,
+            first_order_coupon=coupon,
         )
         platforms.append(
             {
@@ -115,12 +124,22 @@ def compare(
         "beverage": _unit_brief(unit),
         "quantity": qty,
         "include_delivery": include_delivery,
+        "first_order": sorted(first_order_set),
         "platforms": platforms,
         "cheapest": cheapest["platform"] if cheapest else None,
         "savings_vs_max": savings,
     }
 
 
+# ---- 两个界面入口 ---------------------------------------------------------
+# 入口1: /test  测试 + 报表控制台（内部）
+# 入口2: /      正式客户使用界面
+
 @app.get("/")
-def index():
-    return FileResponse(os.path.join(_WEB_DIR, "index.html"))
+def customer_app():
+    return FileResponse(os.path.join(_WEB_DIR, "app.html"))
+
+
+@app.get("/test")
+def test_console():
+    return FileResponse(os.path.join(_WEB_DIR, "test.html"))

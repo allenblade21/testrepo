@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>饮品比价</title>
+<style>
+  :root{
+    --bg:#f4f7f8; --surface:#fff; --line:#dfe7e9; --ink:#152529; --muted:#5c7076;
+    --accent:#0d7f8c; --accent-soft:#e3f2f4; --price:#d4520a; --best:#0e8a45;
+    --best-soft:#e6f5ec; --warn:#c23a2b; --tag-bg:#eef2f4; --tag-ink:#41565d;
+    --merch-bg:#faf0d8; --merch-ink:#7d5a10; --fo:#7c3f9d; --fo-bg:#f3e9f8;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;
+    font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-tap-highlight-color:transparent;}
+  button{touch-action:manipulation;font:inherit;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px 48px;
+    padding-left:max(20px, env(safe-area-inset-left));padding-right:max(20px, env(safe-area-inset-right));}
+  header{border-bottom:1px solid var(--line);background:var(--surface);}
+  .head-in{max-width:880px;margin:0 auto;padding:22px 20px 18px;}
+  .head-in h1{margin:0;font-size:20px;}
+  .head-in .sub{color:var(--muted);font-size:12.5px;margin-top:3px;}
+  .searchrow{display:flex;gap:8px;margin-top:14px;}
+  .searchrow input{flex:1;min-width:0;padding:10px 14px;font-size:15px;border:1.5px solid var(--line);
+    border-radius:10px;background:var(--bg);color:var(--ink);}
+  .searchrow input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+  .searchrow button{padding:10px 22px;min-height:44px;border:none;border-radius:10px;font-weight:600;
+    background:var(--accent);color:#fff;cursor:pointer;}
+  .searchrow button:focus{outline:2px solid var(--ink);outline-offset:2px;}
+  .searchrow button:focus:not(:focus-visible){outline:none;}
+
+  .controls{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:14px 0 4px;
+    color:var(--muted);font-size:13px;}
+  .controls label{display:flex;gap:6px;align-items:center;cursor:pointer;min-height:32px;}
+  .controls input[type=number]{width:58px;padding:5px 7px;border:1px solid var(--line);
+    border-radius:7px;background:var(--surface);color:var(--ink);font-size:13px;}
+  .fo-box{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:4px 0 8px;padding:9px 12px;
+    background:var(--fo-bg);border-radius:10px;font-size:13px;color:var(--fo);}
+  .fo-box b{font-weight:650;}
+  .fo-box label{display:flex;gap:5px;align-items:center;cursor:pointer;min-height:28px;}
+  .fo-hint{font-size:11.5px;opacity:.75;width:100%;}
+
+  .results{display:grid;gap:9px;margin-top:8px;}
+  .unit{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:13px 16px;
+    cursor:pointer;text-align:left;width:100%;color:inherit;transition:border-color .12s;}
+  .unit:hover,.unit.active{border-color:var(--accent);}
+  .unit:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .unit:focus:not(:focus-visible){outline:none;}
+  .unit .name{font-weight:650;font-size:14.5px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .tag{font-size:11px;padding:1px 8px;border-radius:99px;background:var(--tag-bg);color:var(--tag-ink);}
+  .tag.merch{background:var(--merch-bg);color:var(--merch-ink);}
+  .unit .meta{font-size:12px;color:var(--muted);margin-top:3px;}
+
+  .cmp{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:18px;margin-top:14px;}
+  .cmp h2{margin:0;font-size:16.5px;}
+  .cmp .sub{color:var(--muted);font-size:12px;margin:3px 0 14px;}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:11px;}
+  .col{border:1px solid var(--line);border-radius:11px;padding:13px 14px;position:relative;}
+  .col.best{border-color:var(--best);background:var(--best-soft);}
+  .col.off{opacity:.6;}
+  .col .plat{font-weight:650;font-size:13.5px;}
+  .col .price{font-size:26px;font-weight:750;color:var(--price);margin:7px 0 2px;
+    font-variant-numeric:tabular-nums;}
+  .col .price small{font-size:12px;font-weight:500;color:var(--muted);margin-left:3px;}
+  .col .no{color:var(--warn);font-size:11.5px;margin-bottom:4px;}
+  .badge{position:absolute;top:-9px;right:10px;background:var(--best);color:#fff;font-size:10.5px;
+    font-weight:600;padding:2px 9px;border-radius:99px;}
+  .bd{border-top:1px dashed var(--line);margin-top:9px;padding-top:8px;font-size:12px;}
+  .bd .row{display:flex;justify-content:space-between;gap:10px;padding:1.5px 0;color:var(--muted);}
+  .bd .row .amt{font-variant-numeric:tabular-nums;color:var(--ink);}
+  .bd .row.minus .amt{color:var(--best);}
+  .bd .row.fo span:first-child{color:var(--fo);}
+  .save{margin-top:13px;font-weight:650;font-size:13.5px;color:var(--best);}
+  .empty{color:var(--muted);text-align:center;padding:34px 0;}
+  footer{margin-top:34px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;}
+
+  @media (max-width:640px){
+    .head-in,.wrap{padding-left:max(14px, env(safe-area-inset-left));padding-right:max(14px, env(safe-area-inset-right));}
+    .head-in{padding-top:16px;padding-bottom:14px;}
+    .head-in h1{font-size:18px;}
+    .searchrow input,.controls input[type=number]{font-size:16px;}
+    .controls label{min-height:44px;}
+    .cmp{padding:14px;}
+    .col .price{font-size:23px;}
+  }
+  @media (max-width:480px){ .cols{grid-template-columns:1fr;} }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-in">
+    <h1>🥤 饮品比价</h1>
+    <div class="sub">阿里闪购 · 京东 · 美团 —— 同一家商户的同一款饮品，走哪个平台下单更便宜</div>
+    <div class="searchrow">
+      <input id="q" type="text" placeholder="搜商品或商户：可乐 / 永辉 / 罗森 / 喜茶 / 瑞幸…" />
+      <button onclick="doSearch()">搜索</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="controls">
+    <label>数量 <input id="qty" type="number" inputmode="numeric" min="1" max="99" value="1" onchange="recompare()"></label>
+    <label><input id="delivery" type="checkbox" checked onchange="recompare()"> 含配送费</label>
+  </div>
+  <div class="fo-box" id="foBox">
+    <b>🎫 每日首单券</b>
+    <span class="fo-hint">勾选你今天还没下过单的平台——这些平台可用当日首单券，会计入到手价</span>
+  </div>
+
+  <div id="results" class="results"></div>
+  <div id="detail"></div>
+
+  <footer>到手价 = 售价×数量 − 店铺优惠 − 平台补贴 − 券（含每日首单券）+ 配送费；现制饮品未达起送价时不可下单。<br>
+  比价仅在同一商户的跨平台条目间进行。当前为演示数据（Mock），非真实价格。</footer>
+</div>
+
+<script>
+const PLATFORMS = ["阿里闪购","京东","美团"];
+const yuan = c => "¥"+(c/100).toFixed(2);
+let currentUnit = null;
+
+// 首单券勾选框（默认全勾：假设今天还没下过单）
+document.getElementById('foBox').insertAdjacentHTML('beforeend',
+  PLATFORMS.map(p=>`<label><input type="checkbox" class="fo" value="${p}" checked onchange="recompare()"> ${p}</label>`).join(''));
+
+function foParam(){
+  const sel = Array.prototype.slice.call(document.querySelectorAll('.fo:checked')).map(e=>e.value);
+  return sel.join(',');
+}
+
+async function doSearch(){
+  const q = document.getElementById('q').value.trim();
+  const r = await fetch('/search?q='+encodeURIComponent(q));
+  const data = await r.json();
+  const box = document.getElementById('results');
+  document.getElementById('detail').innerHTML = '';
+  currentUnit = null;
+  if(!data.results.length){ box.innerHTML='<div class="empty">没搜到，换个关键词试试～</div>'; return; }
+  box.innerHTML = data.results.map(u=>`
+    <button class="unit" id="card-${u.id}" onclick="doCompare('${u.id}')">
+      <div class="name">${u.name}
+        <span class="tag merch">🏪 ${u.merchant}</span>
+        <span class="tag">${u.type==='made'?'现制':'瓶装'}</span>
+        <span class="tag">${u.platforms.length}个平台</span>
+      </div>
+      <div class="meta">品牌：${u.brand} · 规格：${u.spec} · ${u.platforms.join(' / ')}</div>
+    </button>`).join('');
+}
+
+async function doCompare(id){
+  currentUnit = id;
+  document.querySelectorAll('.unit').forEach(e=>e.classList.remove('active'));
+  const card = document.getElementById('card-'+id); if(card) card.classList.add('active');
+  const qty = +document.getElementById('qty').value || 1;
+  const inc = document.getElementById('delivery').checked;
+  const r = await fetch(`/compare?unit_id=${id}&qty=${qty}&include_delivery=${inc}&first_order=${encodeURIComponent(foParam())}`);
+  const d = await r.json();
+  const cols = d.platforms.map(p=>`
+    <div class="col ${p.platform===d.cheapest?'best':''} ${p.orderable?'':'off'}">
+      ${p.platform===d.cheapest?'<span class="badge">最便宜</span>':''}
+      <div class="plat">${p.platform}</div>
+      <div class="price">${p.orderable?yuan(p.final_price):'—'}<small>到手</small></div>
+      ${p.note?`<div class="no">${p.note}</div>`:''}
+      <div class="bd">${p.breakdown.map(b=>`
+        <div class="row ${b.amount<0?'minus':''} ${b.label.indexOf('首单')>=0?'fo':''}">
+          <span>${b.label.indexOf('首单')>=0?'🎫 ':''}${b.label}</span>
+          <span class="amt">${b.amount<0?'−':''}${yuan(Math.abs(b.amount))}</span></div>`).join('')}
+      </div>
+    </div>`).join('');
+  const savings = (d.savings_vs_max!=null && d.savings_vs_max>0)
+    ? `<div class="save">✅ 选「${d.cheapest}」最省，比最贵的平台省 ${yuan(d.savings_vs_max)}</div>` : '';
+  const foNote = d.first_order.length ? `首单券生效平台: ${d.first_order.join('/')}` : '未启用首单券';
+  document.getElementById('detail').innerHTML = `
+    <div class="cmp">
+      <h2>${d.beverage.name}</h2>
+      <div class="sub">🏪 ${d.beverage.merchant} · 数量 ×${d.quantity} · ${d.include_delivery?'含配送费':'不含配送费'} · ${foNote}</div>
+      <div class="cols">${cols}</div>
+      ${savings}
+    </div>`;
+  const el = document.getElementById('detail');
+  const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try{ el.scrollIntoView({behavior: reduced?'auto':'smooth', block:'nearest'}); }catch(e){ el.scrollIntoView(false); }
+}
+
+function recompare(){ if(currentUnit) doCompare(currentUnit); }
+document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
+doSearch();
+</script>
+</body>
+</html>

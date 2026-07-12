@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>饮品比价 · 测试与报表控制台</title>
+<style>
+  :root{
+    --bg:#f4f7f8; --surface:#fff; --line:#dfe7e9; --ink:#152529; --muted:#5c7076;
+    --accent:#0d7f8c; --price:#d4520a; --best:#0e8a45; --best-soft:#e6f5ec;
+    --warn:#c23a2b; --warn-soft:#fdecea; --tag-bg:#eef2f4; --tag-ink:#41565d;
+    --merch-bg:#faf0d8; --merch-ink:#7d5a10; --fo:#7c3f9d; --fo-bg:#f3e9f8;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;
+    font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-tap-highlight-color:transparent;}
+  button{touch-action:manipulation;font:inherit;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 48px;
+    padding-left:max(20px, env(safe-area-inset-left));padding-right:max(20px, env(safe-area-inset-right));}
+  header{background:var(--ink);color:#fff;}
+  .head-in{max-width:960px;margin:0 auto;padding:16px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+  .head-in h1{margin:0;font-size:17px;font-weight:650;}
+  .head-in .env{font-size:11px;padding:2px 9px;border-radius:99px;background:#3d5560;color:#cfe3e9;}
+  .head-in nav{margin-left:auto;display:flex;gap:14px;font-size:13px;}
+  .head-in a{color:#9fd6df;text-decoration:none;}
+  h2{font-size:15px;margin:26px 0 10px;}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;}
+  .stat .v{font-size:22px;font-weight:750;font-variant-numeric:tabular-nums;}
+  .stat .k{font-size:11.5px;color:var(--muted);}
+  .stat.ok .v{color:var(--best);} .stat.bad .v{color:var(--warn);}
+
+  .tblwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:11px;}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:640px;}
+  th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;}
+  th{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.05em;}
+  tr:last-child td{border-bottom:none;}
+  td.num{font-variant-numeric:tabular-nums;}
+  .pass{color:var(--best);font-weight:650;} .fail{color:var(--warn);font-weight:650;}
+
+  .playground{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px;}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .row input[type=text]{flex:1;min-width:150px;padding:9px 12px;font-size:14px;border:1.5px solid var(--line);
+    border-radius:9px;background:var(--bg);color:var(--ink);}
+  .row button{padding:9px 18px;border:none;border-radius:9px;font-weight:600;background:var(--accent);color:#fff;cursor:pointer;min-height:40px;}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .chip{font-size:12px;padding:5px 10px;border-radius:99px;border:1px solid var(--line);background:var(--bg);cursor:pointer;}
+  .chip:hover{border-color:var(--accent);color:var(--accent);}
+  .chip b{color:var(--accent);margin-right:3px;}
+  .opts{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin-bottom:10px;}
+  .opts label{display:flex;gap:5px;align-items:center;cursor:pointer;}
+  .opts input[type=number]{width:52px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;}
+  .fo-mini{padding:6px 10px;background:var(--fo-bg);border-radius:8px;color:var(--fo);display:flex;gap:10px;flex-wrap:wrap;}
+  pre{background:#101b1f;color:#c9e6ec;border-radius:10px;padding:12px;font-size:11.5px;overflow-x:auto;max-height:420px;}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:6px;}
+  @media (max-width:640px){
+    .row input[type=text],.opts input[type=number]{font-size:16px;}
+    .chips{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:none;}
+    .chips::-webkit-scrollbar{display:none;}
+    .chip{flex:0 0 auto;min-height:38px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-in">
+    <h1>🧪 测试与报表控制台</h1>
+    <span class="env">内部入口 · Mock 数据</span>
+    <nav><a href="/">→ 客户界面</a><a href="/docs">API 文档</a></nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <h2>系统状态</h2>
+  <div class="stats" id="stats"><div class="stat"><div class="v">…</div><div class="k">加载中</div></div></div>
+
+  <h2>自动化场景报表（页面加载即对真实 API 逐一执行）</h2>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>场景</th><th>说明</th><th>参数</th><th>期望最优</th><th>实际最优</th><th>期望到手价</th><th>实际到手价</th><th>结果</th></tr></thead>
+      <tbody id="report"><tr><td colspan="8">运行中…</td></tr></tbody>
+    </table>
+  </div>
+  <div class="hint">S1–S7 不启用首单券（与测试报告基线一致）；S8/S9 验证每日首单券逻辑（含门槛边界与最优翻转）。</div>
+
+  <h2>交互测试台</h2>
+  <div class="playground">
+    <div class="chips" id="chips"></div>
+    <div class="row">
+      <input id="q" type="text" placeholder="关键词：可乐 / 永辉 / 罗森 / 瑞幸…" value="可乐">
+      <button onclick="run()">执行比价</button>
+    </div>
+    <div class="opts">
+      <label>数量 <input id="qty" type="number" inputmode="numeric" min="1" max="99" value="1"></label>
+      <label><input id="delivery" type="checkbox" checked> 含配送费</label>
+      <span class="fo-mini"><b>🎫 首单券</b>
+        <label><input type="checkbox" class="fo" value="阿里闪购"> 阿里闪购</label>
+        <label><input type="checkbox" class="fo" value="京东"> 京东</label>
+        <label><input type="checkbox" class="fo" value="美团"> 美团</label>
+      </span>
+      <label>商户筛选 <input id="merch" type="text" style="width:90px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;" placeholder="如: 永辉"></label>
+    </div>
+    <pre id="out">// 执行后这里显示 /compare 原始返回（调试用）</pre>
+  </div>
+</div>
+
+<script>
+const yuan = c => "¥"+(c/100).toFixed(2);
+const fo_all = "阿里闪购,京东,美团";
+
+const SCENARIOS = [
+  {id:"S1", desc:"永辉·可乐×1 三平台", q:"可乐", m:"永辉", qty:1, del:true,  fo:"",     expP:"阿里闪购", expF:1690},
+  {id:"S2", desc:"罗森·同款可乐 商户隔离", q:"可乐", m:"罗森", qty:1, del:true, fo:"",  expP:"美团", expF:1780},
+  {id:"S3", desc:"可乐×2 第二件半价翻转", q:"可乐", m:"永辉", qty:2, del:true, fo:"",  expP:"美团", expF:2675},
+  {id:"S4", desc:"元气森林 美团缺货降级", q:"元气森林", m:"永辉", qty:1, del:true, fo:"", expP:"阿里闪购", expF:2990},
+  {id:"S5", desc:"瑞幸×1 美团起送拦截", q:"瑞幸", m:"瑞幸", qty:1, del:true, fo:"",   expP:"阿里闪购", expF:1990},
+  {id:"S6", desc:"瑞幸×2 达起送+券", q:"瑞幸", m:"瑞幸", qty:2, del:true, fo:"",      expP:"美团", expF:3560},
+  {id:"S7", desc:"可乐×1 不含配送", q:"可乐", m:"永辉", qty:1, del:false, fo:"",      expP:"京东", expF:1190},
+  {id:"S8", desc:"首单券全开：美团券门槛未达", q:"可乐", m:"永辉", qty:1, del:true, fo:fo_all, expP:"阿里闪购", expF:1290},
+  {id:"S9", desc:"首单券×2件：美团券生效反超", q:"可乐", m:"永辉", qty:2, del:true, fo:fo_all, expP:"美团", expF:2175},
+];
+
+async function findUnit(q, merch){
+  const r = await fetch('/search?q='+encodeURIComponent(q));
+  const d = await r.json();
+  return d.results.find(u => u.merchant.indexOf(merch)>=0) || d.results[0];
+}
+
+async function compareAPI(u, s){
+  const r = await fetch(`/compare?unit_id=${u.id}&qty=${s.qty}&include_delivery=${s.del}&first_order=${encodeURIComponent(s.fo)}`);
+  return r.json();
+}
+
+async function runReport(){
+  const rows = []; let pass = 0;
+  for (const s of SCENARIOS){
+    try{
+      const u = await findUnit(s.q, s.m);
+      const d = await compareAPI(u, s);
+      const best = d.platforms.filter(p=>p.orderable)[0] ? d.platforms.find(p=>p.platform===d.cheapest) : null;
+      const actP = d.cheapest || '—';
+      const actF = best ? best.final_price : null;
+      const ok = actP===s.expP && actF===s.expF;
+      if(ok) pass++;
+      rows.push(`<tr><td><b>${s.id}</b></td><td>${s.desc}</td>
+        <td>×${s.qty}${s.del?'':'·不含配送'}${s.fo?'·🎫':''}</td>
+        <td>${s.expP}</td><td>${actP}</td>
+        <td class="num">${yuan(s.expF)}</td><td class="num">${actF!=null?yuan(actF):'—'}</td>
+        <td class="${ok?'pass':'fail'}">${ok?'PASS':'FAIL'}</td></tr>`);
+    }catch(e){
+      rows.push(`<tr><td><b>${s.id}</b></td><td>${s.desc}</td><td colspan="5">${e}</td><td class="fail">ERROR</td></tr>`);
+    }
+  }
+  document.getElementById('report').innerHTML = rows.join('');
+  return {pass, total:SCENARIOS.length};
+}
+
+async function loadStats(){
+  const h = await (await fetch('/health')).json();
+  const rep = await runReport();
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="v">${h.units}</div><div class="k">可比单元</div></div>
+    <div class="stat"><div class="v">${h.listings}</div><div class="k">平台条目</div></div>
+    <div class="stat ${rep.pass===rep.total?'ok':'bad'}"><div class="v">${rep.pass}/${rep.total}</div><div class="k">场景报表通过</div></div>
+    <div class="stat ok"><div class="v">${h.status}</div><div class="k">服务状态</div></div>`;
+}
+
+// 交互测试台
+document.getElementById('chips').innerHTML = SCENARIOS.map((s,i)=>
+  `<button class="chip" onclick="loadScenario(${i})"><b>${s.id}</b>${s.desc}</button>`).join('');
+
+function loadScenario(i){
+  const s = SCENARIOS[i];
+  document.getElementById('q').value = s.q;
+  document.getElementById('merch').value = s.m;
+  document.getElementById('qty').value = s.qty;
+  document.getElementById('delivery').checked = s.del;
+  document.querySelectorAll('.fo').forEach(e=>{ e.checked = s.fo.indexOf(e.value)>=0; });
+  run();
+}
+
+async function run(){
+  const q = document.getElementById('q').value.trim();
+  const merch = document.getElementById('merch').value.trim();
+  const u = await findUnit(q, merch);
+  if(!u){ document.getElementById('out').textContent = '// 没搜到单元'; return; }
+  const fo = Array.prototype.slice.call(document.querySelectorAll('.fo:checked')).map(e=>e.value).join(',');
+  const d = await compareAPI(u, {qty:+document.getElementById('qty').value||1,
+    del:document.getElementById('delivery').checked, fo:fo});
+  document.getElementById('out').textContent = JSON.stringify(d, null, 2);
+}
+
+loadStats();
+</script>
+</body>
+</html>
