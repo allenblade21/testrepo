@@ -2,27 +2,30 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>饮品比价 · 阿里闪购 / 京东 / 美团</title>
 <style>
   :root { --bg:#f5f6f8; --card:#fff; --line:#e6e8eb; --brand:#2563eb; --green:#16a34a; --muted:#6b7280; }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body { margin:0; font-family: -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
-         background:var(--bg); color:#1f2328; }
+         background:var(--bg); color:#1f2328; -webkit-tap-highlight-color: transparent; }
   header { background:linear-gradient(120deg,#2563eb,#7c3aed); color:#fff; padding:28px 20px; }
   header h1 { margin:0 0 4px; font-size:22px; }
   header p { margin:0; opacity:.85; font-size:13px; }
   .wrap { max-width:960px; margin:0 auto; padding:20px; }
   .searchbar { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
-  .searchbar input[type=text]{ flex:1; min-width:180px; padding:11px 14px; border:1px solid var(--line);
+  .searchbar input[type=text]{ flex:1; min-width:150px; padding:11px 14px; border:1px solid var(--line);
          border-radius:10px; font-size:15px; }
-  .searchbar button{ padding:11px 20px; background:#fff; color:var(--brand); border:none;
-         border-radius:10px; font-weight:600; cursor:pointer; }
+  .searchbar button{ padding:11px 20px; min-height:44px; background:#fff; color:var(--brand); border:none;
+         border-radius:10px; font-weight:600; cursor:pointer; touch-action:manipulation; }
+  .searchbar input:focus, .searchbar button:focus{ outline:2px solid #fff; outline-offset:1px; }
+  .searchbar input:focus:not(:focus-visible), .searchbar button:focus:not(:focus-visible){ outline:none; }
   .controls{ display:flex; gap:16px; align-items:center; margin:14px 2px; font-size:13px; color:var(--muted); flex-wrap:wrap;}
   .controls label{ display:flex; gap:6px; align-items:center; cursor:pointer; }
   .results{ display:grid; gap:10px; }
   .unit{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; cursor:pointer;
-         transition:.15s; }
+         transition:.15s; touch-action:manipulation; }
   .unit:hover{ border-color:var(--brand); box-shadow:0 2px 10px rgba(37,99,235,.08); }
   .unit .name{ font-weight:600; font-size:15px; }
   .unit .meta{ font-size:12px; color:var(--muted); margin-top:3px; }
@@ -46,6 +49,23 @@
   .savings{ margin-top:14px; font-size:14px; color:var(--green); font-weight:600; }
   .empty{ color:var(--muted); text-align:center; padding:30px; }
   .hint{ font-size:12px; color:var(--muted); margin-top:6px; }
+
+  /* ---- 手机自适应 ---- */
+  @media (max-width: 640px){
+    header{ padding:20px 0 16px; }
+    .wrap{ padding:14px; padding-left:max(14px, env(safe-area-inset-left));
+           padding-right:max(14px, env(safe-area-inset-right)); }
+    /* iOS 聚焦输入框自动放大的触发条件是字号<16px，手机上统一提到 16px */
+    .searchbar input[type=text], .controls input[type=number]{ font-size:16px; }
+    .controls label{ min-height:44px; }
+    .cmp{ padding:14px; }
+    .col .price{ font-size:22px; }
+  }
+  @media (max-width: 480px){
+    .cols{ grid-template-columns:1fr; }   /* 平台卡片竖排，避免挤压明细 */
+    .unit .name{ font-size:14px; }
+  }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; scroll-behavior:auto !important; } }
 </style>
 </head>
 <body>
@@ -62,7 +82,7 @@
 
 <div class="wrap">
   <div class="controls">
-    <label>数量 <input id="qty" type="number" min="1" max="99" value="1" style="width:56px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;"></label>
+    <label>数量 <input id="qty" type="number" inputmode="numeric" min="1" max="99" value="1" style="width:56px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;"></label>
     <label><input id="delivery" type="checkbox" checked> 含配送费</label>
     <span class="hint">数据为演示用 Mock 数据，非真实价格</span>
   </div>
@@ -116,7 +136,14 @@ async function doCompare(id){
       <div class="cols">${cols}</div>
       ${savings}
     </div>`;
-  document.getElementById('detail').scrollIntoView({behavior:'smooth', block:'nearest'});
+  smoothScrollTo(document.getElementById('detail'));
+}
+
+// 兼容：老 Safari 不支持 scrollIntoView 的 options 对象；同时尊重减少动效偏好
+function smoothScrollTo(el){
+  var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try { el.scrollIntoView({behavior: reduced ? 'auto' : 'smooth', block:'nearest'}); }
+  catch(e){ el.scrollIntoView(false); }
 }
 
 document.getElementById('q').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
