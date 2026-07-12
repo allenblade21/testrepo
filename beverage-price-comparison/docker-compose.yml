@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8077:8077"
+    environment:
+      REFRESH_INTERVAL_S: "300"        # 每 5 分钟重建数据快照
+      RATE_LIMIT_PER_MIN: "120"        # 每客户端每分钟 120 请求
+      CORS_ORIGINS: "*"                # 生产按需收紧为具体域名
+      ADMIN_TOKEN: "change-me"         # /admin/refresh 管理令牌，务必修改
+    restart: unless-stopped

@@ -1,0 +1,9 @@
+.git
+__pycache__
+*.pyc
+.pytest_cache
+node_modules
+package.json
+package-lock.json
+docs/img
+.env

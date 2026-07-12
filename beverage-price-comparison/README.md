@@ -25,6 +25,14 @@ pip install -r requirements.txt
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8077
 ```
 
+## 容器运行 / 生产配置
+
+```bash
+docker compose up --build   # 端口 8077；环境变量见 .env.example
+```
+
+生产化能力（v0.4.1，配置全部环境变量驱动）：数据快照定时刷新（`REFRESH_INTERVAL_S`）+ 手动刷新（`POST /admin/refresh`，`ADMIN_TOKEN` 保护）、`/metrics` 延迟指标（P50/P95/P99）、请求限流（`RATE_LIMIT_PER_MIN`，`/health` 豁免）、CORS（`CORS_ORIGINS`）、`/compare` 返回 `price_as_of` 价格新鲜度。CI 见 `.github/workflows/ci.yml`（push/PR 自动跑 173 项测试 + E2E）。上线路线见 [docs/上线计划.md](docs/上线计划.md)。
+
 两个界面入口：
 
 - **`/`** — 正式客户使用界面（搜索、每日首单券勾选、三平台并排比价）
