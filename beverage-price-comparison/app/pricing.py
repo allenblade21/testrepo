@@ -2,6 +2,7 @@
 
 到手价 = 售价小计 − 各项优惠（第二件半价/满减/补贴/券）+ 配送费
 
+每项优惠的减免额封顶于当前应付金额，保证到手价恒为非负。
 输出结构化明细，供前端透明展示。所有金额单位为「分」。
 """
 from __future__ import annotations
@@ -71,6 +72,8 @@ def compute_price(
     discount_total = 0
     for promo in sorted(listing.promotions, key=lambda p: _KIND_ORDER.get(p.kind, 99)):
         amount = _promotion_discount(promo, listing, quantity, current)
+        # 任何减免不得超过当前应付：防止误配的满减/券把到手价打成负数
+        amount = min(amount, current)
         if amount > 0:
             current -= amount
             discount_total += amount
