@@ -11,7 +11,7 @@ defaults:
 
 jobs:
   pytest:
-    name: pytest（173 项单元/接口/边界/覆盖测试）
+    name: pytest（全量单元/接口/边界/覆盖测试）
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

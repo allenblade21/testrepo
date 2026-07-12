@@ -23,7 +23,7 @@
 | 文件 | 内容 | 性质 |
 | --- | --- | --- |
 | `seed_data.py` | 4 家核心商户 15 条（永辉/罗森/喜茶/瑞幸）| **手工数据**，承载 S1–S10 场景基线，永不重生成 |
-| `catalog_data.py` | 12 家商户 263 条上架 | 由 `tools/generate_catalog.py` 以**固定随机种子(20260712)** 一次性生成，可复现；瓶装商品 2/3 概率仅上 2 平台（模拟真实上架率）|
+| `catalog_data.py` | 12 家商户 330 条上架 | `tools/generate_catalog.py` 固定种子生成（263 条）+ `tools/fill_platform_gaps.py` 补齐平台缺口（+67 条，v0.4.2）——生成目录全部三平台可比 |
 
 `init_db()` 建三张表并灌数：
 - `listing`（platform, **merchant**, brand, name, spec, type, barcode, list_price, sale_price）
@@ -50,12 +50,12 @@ class PlatformAdapter(abc.ABC):
 
 ```python
 _adapters = [AlibabaAdapter(conn), JDAdapter(conn), MeituanAdapter(conn)]
-_all_listings = 三个适配器 fetch_listings() 结果拼接   # 278 条
+_all_listings = 三个适配器 fetch_listings() 结果拼接   # 345 条
 ```
 
 ### ④ 匹配成可比单元（`app/matching.py: build_units`）
 
-把 278 条平台条目按「**商户 + 商品**」键分组为 **116 个可比单元**：
+把 345 条平台条目按「**商户 + 商品**」键分组为 **116 个可比单元**：
 
 - 单元键第一段永远是归一化商户名——**同款商品不同商户绝不合并**（商户约束）；
 - 第二段：瓶装用**条码**精确匹配；现制用**品牌+品名+规格**归一化匹配（吸收 `/`、空格、全角空格等写法差异）；
@@ -86,7 +86,7 @@ _all_listings = 三个适配器 fetch_listings() 结果拼接   # 278 条
 
 - **架构图**：版本号入文件名（`docs/img/architecture-v<版本>.png`），改版时新增文件而非覆盖，历史版本随 git 保留可追溯；
 - **本文档**：随系统版本演进，配合 [设计文档.md](设计文档.md) §12 版本记录；
-- **数据目录**：`catalog_data.py` 固定种子生成，重生成即形成新版本（测试哨兵 `test_catalog_coverage_sentinel` 钉死当前构成 116/70/23/1，改动即报警）。
+- **数据目录**：`catalog_data.py` 固定种子生成，重生成即形成新版本（测试哨兵 `test_catalog_coverage_sentinel` 钉死当前构成 116 单元/两平台 3/缺美团 1/起送拦截 1，改动即报警）。
 
 ## 5. 版本记录
 

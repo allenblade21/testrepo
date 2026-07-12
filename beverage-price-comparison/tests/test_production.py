@@ -12,7 +12,7 @@ def test_health_exposes_ops_fields():
     d = client.get("/health").json()
     assert d["status"] == "ok"
     assert d["version"] == m.VERSION
-    assert d["units"] == 116 and d["listings"] == 278
+    assert d["units"] == 116 and d["listings"] == 345
     assert "snapshot_at" in d and "uptime_s" in d
     assert d["rebuilds"] >= 1
 
