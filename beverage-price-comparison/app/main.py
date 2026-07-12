@@ -94,7 +94,8 @@ def compare(
 
     platforms = []
     for listing in unit.listings:
-        min_order = seed_data.MIN_ORDER.get(listing.platform, 0) if unit.type == "made" else 0
+        # 起送价为商户×平台级门店属性（商家自设），对所有品类生效；未配置=0
+        min_order = seed_data.STORE_MIN_ORDER.get((listing.merchant, listing.platform), 0)
         coupon = None
         if listing.platform in first_order_set:
             cfg = seed_data.FIRST_ORDER_COUPON.get(listing.platform)

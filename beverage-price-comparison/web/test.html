@@ -84,7 +84,7 @@
       <tbody id="report"><tr><td colspan="8">运行中…</td></tr></tbody>
     </table>
   </div>
-  <div class="hint">S1–S7 不启用首单券（与测试报告基线一致）；S8/S9 验证每日首单券逻辑（含门槛边界与最优翻转）。</div>
+  <div class="hint">S1–S7 不启用首单券（基线）；S8/S9 验证每日首单券；S5/S10 验证商户级起送价（BUG-002 修复：起送价按门店而非平台）。</div>
 
   <h2>交互测试台</h2>
   <div class="playground">
@@ -116,11 +116,12 @@ const SCENARIOS = [
   {id:"S2", desc:"罗森·同款可乐 商户隔离", q:"可乐", m:"罗森", qty:1, del:true, fo:"",  expP:"美团", expF:1780},
   {id:"S3", desc:"可乐×2 第二件半价翻转", q:"可乐", m:"永辉", qty:2, del:true, fo:"",  expP:"美团", expF:2675},
   {id:"S4", desc:"元气森林 美团缺货降级", q:"元气森林", m:"永辉", qty:1, del:true, fo:"", expP:"阿里闪购", expF:2990},
-  {id:"S5", desc:"瑞幸×1 美团起送拦截", q:"瑞幸", m:"瑞幸", qty:1, del:true, fo:"",   expP:"阿里闪购", expF:1990},
-  {id:"S6", desc:"瑞幸×2 达起送+券", q:"瑞幸", m:"瑞幸", qty:2, del:true, fo:"",      expP:"美团", expF:3560},
+  {id:"S5", desc:"瑞幸×1 起送修复:美团¥17.8可下单(BUG-002)", q:"瑞幸", m:"瑞幸", qty:1, del:true, fo:"", expP:"美团", expF:1780},
+  {id:"S6", desc:"瑞幸×2 券生效", q:"瑞幸", m:"瑞幸", qty:2, del:true, fo:"",      expP:"美团", expF:3560},
   {id:"S7", desc:"可乐×1 不含配送", q:"可乐", m:"永辉", qty:1, del:false, fo:"",      expP:"京东", expF:1190},
   {id:"S8", desc:"首单券全开：美团券门槛未达", q:"可乐", m:"永辉", qty:1, del:true, fo:fo_all, expP:"阿里闪购", expF:1290},
   {id:"S9", desc:"首单券×2件：美团券生效反超", q:"可乐", m:"永辉", qty:2, del:true, fo:fo_all, expP:"美团", expF:2175},
+  {id:"S10", desc:"喜茶×1 商户级起送¥26拦截美团", q:"多肉葡萄", m:"喜茶", qty:1, del:true, fo:"", expP:"阿里闪购", expF:2600},
 ];
 
 async function findUnit(q, merch){

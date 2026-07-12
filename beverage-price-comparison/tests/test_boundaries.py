@@ -168,13 +168,14 @@ def test_api_tie_cheapest_deterministic_and_savings_correct():
 
 
 def test_api_compare_result_ordering():
-    """返回按到手价升序、不可下单排最后。"""
+    """返回按到手价升序、不可下单排最后（喜茶美团起送¥26，×1 被拦截）。"""
     client = _client()
-    res = client.get("/search", params={"q": "瑞幸"}).json()["results"]
-    d = client.get("/compare", params={"unit_id": res[0]["id"], "qty": 1}).json()
+    res = client.get("/search", params={"q": "多肉葡萄", "limit": 100}).json()["results"]
+    unit = next(r for r in res if "喜茶" in r["merchant"])
+    d = client.get("/compare", params={"unit_id": unit["id"], "qty": 1}).json()
     plats = d["platforms"]
     orderables = [p for p in plats if p["orderable"]]
     assert plats[: len(orderables)] == orderables, "可下单的必须排在前面"
     finals = [p["final_price"] for p in orderables]
     assert finals == sorted(finals), "可下单部分必须按到手价升序"
-    assert plats[-1]["orderable"] is False, "瑞幸×1 美团应被起送拦截且排最后"
+    assert plats[-1]["orderable"] is False, "喜茶×1 美团应被起送拦截且排最后"
