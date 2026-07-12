@@ -144,6 +144,41 @@ def test_api_search_relevance_brand_first():
     assert "星巴克" in results[0]["brand"], "品牌命中应排最前"
 
 
+def test_api_paging_exhaustion_no_overlap_no_loss():
+    """「加载更多」计数依赖的后端契约：带关键词翻页到底，
+    不重、不漏、各页 total 恒定、累计数恰好等于 total。"""
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    seen, offset, total = [], 0, None
+    while True:
+        d = client.get("/search", params={"q": "茶", "limit": 20, "offset": offset}).json()
+        if total is None:
+            total = d["total"]
+        assert d["total"] == total, "翻页过程中 total 必须恒定"
+        if d["count"] == 0:
+            break
+        ids = [r["id"] for r in d["results"]]
+        assert not set(ids) & set(seen), "页间出现重复条目"
+        seen.extend(ids)
+        offset += d["count"]
+        assert offset <= total, "累计返回数不得超过 total"
+    assert len(seen) == total, f"翻页到底应恰好取回全部：{len(seen)} != {total}"
+
+
+def test_api_offset_beyond_total_returns_empty():
+    """偏移越过总数（前端竞态可能产生的请求）→ 空页 + total 不受影响。"""
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    total = client.get("/search", params={"q": "茶", "limit": 1}).json()["total"]
+    d = client.get("/search", params={"q": "茶", "limit": 20, "offset": total + 100}).json()
+    assert d["count"] == 0 and d["results"] == []
+    assert d["total"] == total
+
+
 def test_api_search_full_catalog_size():
     """全商户产品库规模：单元数应达到目录级别（>60），覆盖多家商户。"""
     from fastapi.testclient import TestClient

@@ -155,7 +155,10 @@ function unitCard(u){
 }
 
 async function doSearch(append){
-  const q = document.getElementById('q').value.trim();
+  // 追加加载必须钉死在当前列表所属的查询词上——不能读输入框实时值，
+  // 否则「输入新词→防抖未触发→点加载更多」会用新词+旧偏移请求，
+  // 出现 已显示>共计 的错乱（BUG-003）
+  const q = append ? curQuery : document.getElementById('q').value.trim();
   if(!append){ curOffset = 0; curQuery = q; document.getElementById('detail').innerHTML=''; currentUnit=null; }
   const seq = ++searchSeq;   // 丢弃过期响应，防止快速输入时乱序
   const r = await fetch(`/search?q=${encodeURIComponent(q)}&limit=${PAGE}&offset=${curOffset}`);
