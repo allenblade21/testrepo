@@ -82,6 +82,100 @@ _all_listings = 三个适配器 fetch_listings() 结果拼接   # 345 条
 
 ---
 
+## 3A. 时序图
+
+以下 Mermaid 时序图在 GitHub 上原生渲染，覆盖三条关键链路。
+
+### 时序图 1 · 启动抽取流（进程启动一次）
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Boot as 进程启动 DataStore
+    participant Seed as seed_data + catalog_data
+    participant DB as SQLite (init_db)
+    participant Ad as 三平台 Adapter
+    participant Match as matching.build_units
+    participant Store as 内存索引 store
+
+    Boot->>DB: init_db() 建 listing/promotion/delivery 表
+    Seed->>DB: 灌入 345 条数据
+    Boot->>Ad: 实例化 阿里闪购/京东/美团 Adapter
+    loop 每个平台
+        Boot->>Ad: fetch_listings()
+        Ad->>DB: SELECT WHERE platform=?
+        DB-->>Ad: 平台条目行 (listing ⟕ promotion)
+        Ad-->>Boot: List[Listing]（已归一化）
+    end
+    Boot->>Match: build_units(345 条)
+    Match->>Match: 按「商户+商品」键分组 + 断言商户唯一
+    Match-->>Store: 116 可比单元 + units_by_id
+    Note over Store: 常驻内存；查询只读，不回库
+```
+
+### 时序图 2 · 比价查询流（客户界面 `/`）
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as 用户
+    participant FE as 客户界面 app.html
+    participant API as FastAPI
+    participant Store as 内存索引
+    participant Price as pricing 引擎
+
+    U->>FE: 输入关键词（防抖）
+    FE->>API: GET /search?q=&limit=&offset=&grid=
+    API->>Store: search_units + 相关度排序 + 分页
+    Store-->>API: 命中单元（本页）
+    API-->>FE: {total, results}
+    FE-->>U: 渲染商品列表
+
+    U->>FE: 点某商品
+    FE->>API: GET /compare?unit_id=&qty=&include_delivery=&first_order=
+    API->>Store: 取 unit
+    API->>API: 商户唯一校验（跨商户→409）
+    loop 单元内每个平台条目
+        API->>Price: compute_price(数量/配送口径/商户级起送/首单券)
+        Price-->>API: 到手价 + 逐行明细（减免封顶，恒非负）
+    end
+    API->>API: 过滤不可下单者 → 评选最优 + 节省额
+    API-->>FE: 三平台并排 + cheapest + price_as_of
+    FE-->>U: 渲染比价卡（最优高亮）
+```
+
+### 时序图 3 · 商户发现流（`/discover`，含 GPS 定位）
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as 用户
+    participant FE as 商户发现 discover.html
+    participant Geo as 浏览器 Geolocation
+    participant API as FastAPI
+    participant Store as 内存索引
+
+    U->>FE: 点「使用当前位置」
+    FE->>FE: 预检 内嵌/HTTPS/权限态
+    FE->>Geo: getCurrentPosition()
+    Geo-->>FE: 坐标 (lat,lng)
+    FE->>API: GET /grid/resolve?lat=&lng=
+    API-->>FE: {grid_id, grid_name}（坐标即用即弃，不落库）
+
+    U->>FE: 输入商户名（模糊，防抖）
+    FE->>API: GET /api/discover?q=&grid=&merchant_limit=20&product_limit=100&product_offset=
+    API->>Store: _merchant_groups：网格过滤 + 地点排名 + 商户上限20
+    API->>API: 命中商户商品扁平化 → 按 100/页分页
+    Store-->>API: merchants(≤20) + products(本页)
+    API-->>FE: {merchant_total, product_total, merchants, products}
+    FE-->>U: 商户 chips + 商品分页列表
+
+    U->>FE: 点某商品
+    FE->>API: GET /compare?unit_id=
+    API-->>FE: 三平台到手价
+    FE-->>U: 内联比价卡
+```
+
 ## 4. 版本化约定
 
 - **架构图**：版本号入文件名（`docs/img/architecture-v<版本>.png`），改版时新增文件而非覆盖，历史版本随 git 保留可追溯；
@@ -93,3 +187,4 @@ _all_listings = 三个适配器 fetch_listings() 结果拼接   # 345 条
 | 版本 | 架构图 | 变更 |
 | --- | --- | --- |
 | v0.3.4 | `img/architecture-v0.3.4.png` | 首版整体架构图：双入口 + 内存索引 + 可插拔适配层 + 固定种子数据源；商品抽取链路 ①→④ 与查询流 Ⓐ Ⓑ 标注 |
+| v0.6.0 | （复用上图）| §3A 新增三张 Mermaid 时序图：启动抽取流 / 比价查询流 / 商户发现流（含 GPS 定位）|
