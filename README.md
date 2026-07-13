@@ -1,22 +1,26 @@
 # 比价系统（Price Comparison Platform）
 
-一个面向本地即时零售/餐饮速递的比价平台。初期接入 **阿里闪购**（淘宝闪购/淘宝小时达即时零售）与 **美团**（餐饮外卖/速递）两大平台，帮助用户在下单前对同一商品或同一餐品在不同平台的**到手价**进行透明比较。
+饮品/即时零售比价平台。**当前主项目为三平台（阿里闪购 / 京东 / 美团）饮品比价系统**，位于 [`beverage-price-comparison/`](beverage-price-comparison/)。
 
-## 文档索引
+## 快速导航
 
-| 文档 | 说明 |
+| 我想… | 去 |
 | --- | --- |
-| [docs/需求文档.md](docs/需求文档.md) | 产品需求主文档：背景、目标、功能需求、非功能需求、路线图 |
-| [docs/系统架构.md](docs/系统架构.md) | 系统架构设计：分层架构、核心模块、数据流、技术选型 |
-| [docs/数据字典.md](docs/数据字典.md) | 关键数据实体与字段定义（比价所需的「细节输入」） |
+| 了解 Agent 协作规则/命令/铁律 | [AGENTS.md](AGENTS.md) · [CLAUDE.md](CLAUDE.md) |
+| 进入当前主项目 | [beverage-price-comparison/](beverage-price-comparison/)（先读其 `CLAUDE.md`）|
+| 看版本历史 | [beverage-price-comparison/CHANGELOG.md](beverage-price-comparison/CHANGELOG.md) |
+| 看当前进度/待办 | [beverage-price-comparison/docs/状态看板.md](beverage-price-comparison/docs/状态看板.md) |
+| 早期 2 平台方案（已存档）| [docs/](docs/)（⚠️ 历史存档，勿开发）|
 
-## 初期范围（MVP）
+## 仓库结构
 
-- 平台接入：阿里闪购、美团餐饮速递
-- 品类：餐饮外卖 + 部分即时零售（商超/生鲜）
-- 核心能力：商品/餐品匹配、到手价计算、比价展示、跳转下单
-- 地域：先在 1~2 个试点城市验证
-
-## 状态
-
-📄 需求与架构设计阶段（v0.1）。本仓库当前仅包含需求与设计文档，尚无代码实现。
+```
+testrepo/
+├── AGENTS.md / CLAUDE.md            Agent 操作手册（根级共享契约）
+├── docs/                           ⚠️ 第一代 2 平台方案存档（已被主项目取代）
+└── beverage-price-comparison/      ★ 当前主项目（v0.5.2）
+    ├── CLAUDE.md                   项目级手册
+    ├── CHANGELOG.md                版本历史（唯一真相源）
+    ├── app/ web/ tests/ tools/     后端 / 前端 / 测试 / 离线工具
+    └── docs/                       设计·需求·测试·上线·决策·复盘·状态看板
+```
