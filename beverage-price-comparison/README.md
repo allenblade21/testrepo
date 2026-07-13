@@ -5,6 +5,8 @@
 > **Agent 手册** [CLAUDE.md](CLAUDE.md) · **版本历史** [CHANGELOG.md](CHANGELOG.md) · **进度看板** [docs/状态看板.md](docs/状态看板.md) · **决策记录** [docs/决策记录.md](docs/决策记录.md) · **复盘** [docs/复盘.md](docs/复盘.md)
 >
 > **真实上线需求（PRD v1.0）**见 [docs/真实上线需求文档.md](docs/真实上线需求文档.md)；设计文档（含组件架构图）见 [docs/设计文档.md](docs/设计文档.md)；**整体架构图与商品抽取原理**见 [docs/商品抽取API原理.md](docs/商品抽取API原理.md)；端到端测试报告见 [docs/测试报告.md](docs/测试报告.md)。
+>
+> **新垂直立项**：[docs/团餐团购比价需求.md](docs/团餐团购比价需求.md)——餐厅到店团购套餐 / 多人团餐的跨平台比价（平台集与到手价口径均不同于饮品，独立评审）。
 
 ## 功能
 
