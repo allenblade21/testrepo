@@ -21,12 +21,14 @@ import time
 from collections import Counter, deque
 from contextlib import asynccontextmanager
 
+import geo_data
 import seed_data
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
 from .config import settings
+from .geo import merchant_rank, resolve_grid
 from .matching import _normalize, search_units
 from .models import ComparableUnit, Promotion
 from .pricing import compute_price
@@ -170,6 +172,39 @@ def admin_refresh(request: Request):
             "units": len(store.units), "snapshot_at": store.snapshot_at_iso}
 
 
+# ---- 地理接口（PRD §4：定位与网格）------------------------------------------
+
+def _check_grid(grid: str) -> None:
+    if grid and grid not in geo_data.GRIDS:
+        raise HTTPException(status_code=400, detail=f"未知商圈网格: {grid}")
+
+
+def _in_grid(merchant: str, grid: str) -> bool:
+    """商户是否服务该网格（Mock：按归属网格；真实阶段按配送范围判定）。"""
+    geo = geo_data.MERCHANT_GEO.get(merchant)
+    return geo is not None and geo[2] == grid
+
+
+@app.get("/grids")
+def grids():
+    """商圈网格列表（界面手动选择器数据源）。"""
+    return {"grids": [
+        {"grid_id": gid, "name": name, "lat": lat, "lng": lng}
+        for gid, (name, lat, lng) in geo_data.GRIDS.items()
+    ]}
+
+
+@app.get("/grid/resolve")
+def grid_resolve(lat: float = Query(..., ge=-90, le=90),
+                 lng: float = Query(..., ge=-180, le=180)):
+    """坐标 → 商圈网格。坐标仅在本次请求中使用，不落库（隐私最小化）。"""
+    hit = resolve_grid(lat, lng)
+    if hit is None:
+        return {"in_service": False,
+                "message": "当前位置不在服务区（试点商圈：望京/国贸/中关村/五道口），请手动选择商圈"}
+    return {"in_service": True, **hit}
+
+
 # ---- 业务接口 ---------------------------------------------------------------
 
 def _unit_brief(unit: ComparableUnit) -> dict:
@@ -189,9 +224,13 @@ def search(
     q: str = Query("", description="关键词（商品名/品牌/商户名，空=浏览全库）"),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
+    grid: str = Query("", description="商圈网格 ID；传入时只返回该网格内可送达商户的商品"),
 ):
-    """全商户产品库搜索：相关度排序 + 分页。"""
+    """全商户产品库搜索：相关度排序 + 分页 + 可选网格过滤。"""
+    _check_grid(grid)
     hits = search_units(store.units, q)
+    if grid:
+        hits = [u for u in hits if _in_grid(u.merchant, grid)]
     page = hits[offset : offset + limit]
     return {
         "query": q,
@@ -203,20 +242,33 @@ def search(
 
 
 @app.get("/merchants")
-def merchants_aggregate(q: str = Query("", description="商户名关键词，空=全部商户")):
+def merchants_aggregate(
+    q: str = Query("", description="商户名关键词，空=全部商户"),
+    grid: str = Query("", description="商圈网格 ID；传入时只返回网格内商户并按地点排名分排序"),
+):
     """聚合 API：按商户名聚合，返回每个命中商户下的全部商品名列表。
 
-    供界面「商户直达」搜索框实时调用：输入商户名 → 该商户全部可比商品
-    →（点击任一商品进入 /compare 比价）。聚合读取常驻内存单元索引。
+    传入 grid 时：过滤为该网格内可送达商户，并按 PRD §4.3 排名分
+    （平台覆盖度/销量/距离衰减/评分）降序，附带距离与可解释因子。
     """
+    _check_grid(grid)
     nq = _normalize(q)
     groups: dict[str, list[ComparableUnit]] = {}
     for u in store.units:
-        if not nq or nq in _normalize(u.merchant):
-            groups.setdefault(u.merchant, []).append(u)
+        if nq and nq not in _normalize(u.merchant):
+            continue
+        if grid and not _in_grid(u.merchant, grid):
+            continue
+        groups.setdefault(u.merchant, []).append(u)
 
-    merchants = [
-        {
+    max_sales = max(
+        (geo_data.MERCHANT_GEO[m][4] for m in groups if m in geo_data.MERCHANT_GEO),
+        default=0,
+    ) if grid else 0
+
+    merchants = []
+    for m, us in groups.items():
+        entry = {
             "merchant": m,
             "product_count": len(us),
             "products": [
@@ -229,9 +281,21 @@ def merchants_aggregate(q: str = Query("", description="商户名关键词，空
                 for u in sorted(us, key=lambda x: (-len(x.listings), x.name))
             ],
         }
-        for m, us in sorted(groups.items(), key=lambda kv: (-len(kv[1]), kv[0]))
-    ]
-    return {"query": q, "count": len(merchants), "merchants": merchants}
+        if grid:
+            avg_platforms = sum(len(u.listings) for u in us) / len(us)
+            entry["rank"] = merchant_rank(m, grid, avg_platforms, max_sales)
+        merchants.append(entry)
+
+    if grid:
+        # 地点排名：分数高者在前（可解释因子随 rank 透出）
+        merchants.sort(key=lambda e: -e["rank"]["score"])
+    else:
+        merchants.sort(key=lambda e: (-e["product_count"], e["merchant"]))
+
+    resp = {"query": q, "count": len(merchants), "merchants": merchants}
+    if grid:
+        resp["grid"] = {"grid_id": grid, "name": geo_data.GRIDS[grid][0]}
+    return resp
 
 
 @app.get("/compare")

@@ -21,8 +21,28 @@
     padding-left:max(20px, env(safe-area-inset-left));padding-right:max(20px, env(safe-area-inset-right));}
   header{border-bottom:1px solid var(--line);background:var(--surface);}
   .head-in{max-width:880px;margin:0 auto;padding:22px 20px 18px;}
-  .head-in h1{margin:0;font-size:20px;}
+  .head-in h1{margin:0;font-size:20px;display:inline-block;}
   .head-in .sub{color:var(--muted);font-size:12.5px;margin-top:3px;}
+  /* 位置胶囊 + 选择面板 */
+  .locpill{display:inline-flex;align-items:center;gap:5px;margin-left:12px;vertical-align:middle;
+    font-size:12.5px;font-weight:600;padding:5px 13px;border-radius:99px;cursor:pointer;
+    border:1.5px solid var(--accent);color:var(--accent);background:var(--accent-soft);}
+  .locpill:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .locpill:focus:not(:focus-visible){outline:none;}
+  .locpanel{display:none;margin-top:10px;border:1.5px solid var(--line);border-radius:12px;
+    background:var(--surface);padding:12px 14px;}
+  .locpanel.open{display:block;}
+  .gpsbtn{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;margin-bottom:10px;
+    border:1.5px solid var(--accent);border-radius:10px;background:var(--accent-soft);
+    color:var(--accent);font-weight:600;font-size:13.5px;cursor:pointer;min-height:44px;}
+  .gpsbtn:disabled{opacity:.6;cursor:wait;}
+  .loclabel{font-size:11.5px;color:var(--muted);margin-bottom:6px;}
+  .gridchips{display:flex;gap:7px;flex-wrap:wrap;}
+  .gridchip{font-size:12.5px;padding:7px 14px;border-radius:99px;border:1px solid var(--line);
+    background:var(--bg);color:var(--ink);cursor:pointer;min-height:36px;}
+  .gridchip.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:650;}
+  .locmsg{font-size:11.5px;color:var(--warn);margin-top:8px;}
+  .mdist{font-size:11px;color:var(--accent);font-weight:600;}
   .searchrow{display:flex;gap:8px;margin-top:14px;}
   .searchrow input{flex:1;min-width:0;padding:10px 14px;font-size:15px;border:1.5px solid var(--line);
     border-radius:10px;background:var(--bg);color:var(--ink);}
@@ -115,8 +135,14 @@
 <body>
 <header>
   <div class="head-in">
-    <h1>🥤 饮品比价</h1>
+    <h1>🥤 饮品比价</h1><button class="locpill" id="locpill" onclick="toggleLocPanel()">📍 选择位置 ▾</button>
     <div class="sub">阿里闪购 · 京东 · 美团 —— 同一家商户的同一款饮品，走哪个平台下单更便宜</div>
+    <div class="locpanel" id="locpanel">
+      <button class="gpsbtn" id="gpsbtn" onclick="useMyLocation()">⊕ 使用当前位置（GPS）</button>
+      <div class="loclabel">或选择商圈（也可不限位置浏览全部）：</div>
+      <div class="gridchips" id="gridchips"></div>
+      <div class="locmsg" id="locmsg"></div>
+    </div>
     <div class="searchrow">
       <input id="q" type="text" placeholder="搜商品或商户：可乐 / 永辉 / 罗森 / 喜茶 / 瑞幸…" />
       <button onclick="doSearch()">搜索</button>
@@ -154,6 +180,64 @@ const PLATFORMS = ["阿里闪购","京东","美团"];
 const yuan = c => "¥"+(c/100).toFixed(2);
 let currentUnit = null;
 
+/* ===== 位置：GPS / 商圈网格（PRD FR-B1 三级降级）===== */
+let curGrid = localStorage.getItem('grid') || '';        // ''=不限位置
+let curGridName = localStorage.getItem('gridName') || '';
+let GRID_LIST = [];
+
+function gridParam(){ return curGrid ? '&grid=' + encodeURIComponent(curGrid) : ''; }
+
+function renderLocState(){
+  document.getElementById('locpill').textContent =
+    curGrid ? ('📍 ' + curGridName + ' ▾') : '📍 选择位置 ▾';
+  document.getElementById('gridchips').innerHTML =
+    `<button class="gridchip ${!curGrid?'on':''}" onclick="setGrid('','')">不限位置</button>` +
+    GRID_LIST.map(g => `<button class="gridchip ${curGrid===g.grid_id?'on':''}"
+      onclick="setGrid('${g.grid_id}','${g.name}')">${g.name}</button>`).join('');
+}
+
+function setGrid(id, name){
+  curGrid = id; curGridName = name;
+  localStorage.setItem('grid', id); localStorage.setItem('gridName', name);
+  document.getElementById('locmsg').textContent = '';
+  renderLocState();
+  toggleLocPanel(false);
+  doSearch();                                   // 网格变化 → 结果全部重算
+  const mq = document.getElementById('mq');
+  if(mq.value.trim()) searchMerchants();
+}
+
+function toggleLocPanel(force){
+  const p = document.getElementById('locpanel');
+  const open = typeof force === 'boolean' ? force : !p.classList.contains('open');
+  p.classList.toggle('open', open);
+}
+
+function useMyLocation(){
+  const btn = document.getElementById('gpsbtn');
+  const msg = document.getElementById('locmsg');
+  if(!navigator.geolocation){ msg.textContent = '当前浏览器不支持定位，请手动选择商圈'; return; }
+  btn.disabled = true; btn.textContent = '⊕ 定位中…';
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      // 坐标只用于本次网格解析，不存储（隐私最小化）
+      const r = await fetch(`/grid/resolve?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`);
+      const d = await r.json();
+      btn.disabled = false; btn.textContent = '⊕ 使用当前位置（GPS）';
+      if(d.in_service){ setGrid(d.grid_id, d.grid_name); }
+      else { msg.textContent = d.message; }
+    },
+    err => {
+      btn.disabled = false; btn.textContent = '⊕ 使用当前位置（GPS）';
+      msg.textContent = err.code === 1 ? '定位授权被拒绝，请手动选择商圈'
+                       : '定位失败（' + err.message + '），请手动选择商圈';
+    },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+  );
+}
+
+fetch('/grids').then(r => r.json()).then(d => { GRID_LIST = d.grids; renderLocState(); });
+
 // 首单券勾选框（默认全勾：假设今天还没下过单）
 document.getElementById('foBox').insertAdjacentHTML('beforeend',
   PLATFORMS.map(p=>`<label><input type="checkbox" class="fo" value="${p}" checked onchange="recompare()"> ${p}</label>`).join(''));
@@ -185,7 +269,7 @@ async function doSearch(append){
   const q = append ? curQuery : document.getElementById('q').value.trim();
   if(!append){ curOffset = 0; curQuery = q; document.getElementById('detail').innerHTML=''; currentUnit=null; }
   const seq = ++searchSeq;   // 丢弃过期响应，防止快速输入时乱序
-  const r = await fetch(`/search?q=${encodeURIComponent(q)}&limit=${PAGE}&offset=${curOffset}`);
+  const r = await fetch(`/search?q=${encodeURIComponent(q)}&limit=${PAGE}&offset=${curOffset}${gridParam()}`);
   const data = await r.json();
   if(seq !== searchSeq) return;
   curTotal = data.total;
@@ -194,8 +278,9 @@ async function doSearch(append){
   if(append){ box.insertAdjacentHTML('beforeend', cards); }
   else { box.innerHTML = data.results.length ? cards : '<div class="empty">没搜到，换个关键词试试～</div>'; }
   curOffset += data.count;
+  const scope = curGrid ? `（${curGridName}内）` : '（全部商品库）';
   document.getElementById('meta').textContent =
-    data.total ? `共 ${data.total} 个可比商品${q?`（关键词：${q}）`:'（全部商品库）'}，已显示 ${curOffset} 个` : '';
+    data.total ? `共 ${data.total} 个可比商品${q?`（关键词：${q}）`:scope}，已显示 ${curOffset} 个` : '';
   document.getElementById('more').innerHTML =
     curOffset < curTotal ? `<button class="morebtn" onclick="doSearch(true)">加载更多（还有 ${curTotal-curOffset} 个）</button>` : '';
 }
@@ -219,13 +304,18 @@ async function searchMerchants(){
   const box = document.getElementById('mgroups');
   if(!q){ box.innerHTML = ''; return; }        // 空输入收起面板
   const seq = ++mqSeq;
-  const r = await fetch('/merchants?q=' + encodeURIComponent(q));
+  const r = await fetch('/merchants?q=' + encodeURIComponent(q) + gridParam());
   const data = await r.json();
   if(seq !== mqSeq) return;                    // 丢弃过期响应
-  if(!data.count){ box.innerHTML = '<div class="empty-m">没有匹配的商户，换个名字试试～</div>'; return; }
+  if(!data.count){
+    box.innerHTML = `<div class="empty-m">${curGrid?curGridName+'内':''}没有匹配的商户，换个名字试试～</div>`;
+    return;
+  }
   box.innerHTML = data.merchants.map(g => `
     <div class="mgroup">
-      <div class="mname">🏪 ${g.merchant}<span class="mcount">${g.product_count} 个可比商品 · 点击直接比价</span></div>
+      <div class="mname">🏪 ${g.merchant}
+        ${g.rank ? `<span class="mdist">${g.rank.distance_km}km · 排名分${g.rank.score.toFixed(2)}</span>` : ''}
+        <span class="mcount">${g.product_count} 个可比商品 · 点击直接比价</span></div>
       <div class="plist">${g.products.map(p => `
         <button class="pchip" onclick="doCompare('${p.id}')">${p.name}<span class="pn">${p.platforms.length}平台</span></button>`).join('')}
       </div>
