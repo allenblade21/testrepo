@@ -21,18 +21,24 @@ import time
 from collections import Counter, deque
 from contextlib import asynccontextmanager
 
+from datetime import datetime, timezone, timedelta
+
 import geo_data
 import seed_data
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 
 from .config import settings
+from .export_pdf import build_comparison_pdf
 from .geo import merchant_rank, resolve_grid
 from .matching import _normalize, search_units
 from .models import ComparableUnit, Promotion
 from .pricing import compute_price
 from .store import DataStore
+
+# 展示用东八区时间（导出时间戳）
+_CST = timezone(timedelta(hours=8))
 
 VERSION = "0.4.1"
 _WEB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "web")
@@ -365,26 +371,18 @@ def discover(
     return resp
 
 
-@app.get("/compare")
-def compare(
-    unit_id: str,
-    qty: int = Query(1, ge=1, le=99),
-    include_delivery: bool = True,
-    first_order: str = Query("", description="当日尚未下过单的平台，逗号分隔；这些平台享每日首单券"),
-):
+def _compute_comparison(unit_id: str, qty: int = 1, include_delivery: bool = True,
+                        first_order: str = "") -> dict:
+    """比价编排（供 /compare 与 /export 共用）。未找到→404，跨商户→409。"""
     unit = store.units_by_id.get(unit_id)
     if unit is None:
         raise HTTPException(status_code=404, detail="未找到该饮品")
-
-    # 商户约束（双保险）：比价的所有条目必须属于同一商户
     if len({l.merchant for l in unit.listings}) != 1:
         raise HTTPException(status_code=409, detail="可比单元跨商户，拒绝比价")
 
     first_order_set = {p.strip() for p in first_order.split(",") if p.strip()}
-
     platforms = []
     for listing in unit.listings:
-        # 起送价为商户×平台级门店属性（商家自设），对所有品类生效；未配置=0
         min_order = seed_data.STORE_MIN_ORDER.get((listing.merchant, listing.platform), 0)
         coupon = None
         if listing.platform in first_order_set:
@@ -392,26 +390,16 @@ def compare(
             if cfg:
                 coupon = Promotion(kind="首单券", desc=cfg[0], value=cfg[1], threshold=cfg[2])
         result = compute_price(
-            listing,
-            store.delivery[listing.platform],
-            quantity=qty,
-            include_delivery=include_delivery,
-            min_order=min_order,
-            first_order_coupon=coupon,
+            listing, store.delivery[listing.platform], quantity=qty,
+            include_delivery=include_delivery, min_order=min_order, first_order_coupon=coupon,
         )
-        platforms.append(
-            {
-                "platform": result.platform,
-                "merchant": listing.merchant,
-                "final_price": result.final_price,
-                "subtotal": result.subtotal,
-                "discount_total": result.discount_total,
-                "delivery_fee": result.delivery_fee,
-                "orderable": result.orderable,
-                "note": result.note,
-                "breakdown": [{"label": ln.label, "amount": ln.amount} for ln in result.lines],
-            }
-        )
+        platforms.append({
+            "platform": result.platform, "merchant": listing.merchant,
+            "final_price": result.final_price, "subtotal": result.subtotal,
+            "discount_total": result.discount_total, "delivery_fee": result.delivery_fee,
+            "orderable": result.orderable, "note": result.note,
+            "breakdown": [{"label": ln.label, "amount": ln.amount} for ln in result.lines],
+        })
 
     orderable = [p for p in platforms if p["orderable"]]
     cheapest = min(orderable, key=lambda p: p["final_price"]) if orderable else None
@@ -420,19 +408,73 @@ def compare(
         highest = max(orderable, key=lambda p: p["final_price"])
         savings = highest["final_price"] - cheapest["final_price"]
 
-    # 按到手价升序展示，不可下单排最后
     platforms.sort(key=lambda p: (not p["orderable"], p["final_price"]))
-
     return {
         "beverage": _unit_brief(unit),
         "quantity": qty,
         "include_delivery": include_delivery,
         "first_order": sorted(first_order_set),
-        "price_as_of": store.snapshot_at_iso,   # 价格快照时间（新鲜度）
+        "price_as_of": store.snapshot_at_iso,
         "platforms": platforms,
         "cheapest": cheapest["platform"] if cheapest else None,
         "savings_vs_max": savings,
     }
+
+
+@app.get("/compare")
+def compare(
+    unit_id: str,
+    qty: int = Query(1, ge=1, le=99),
+    include_delivery: bool = True,
+    first_order: str = Query("", description="当日尚未下过单的平台，逗号分隔；这些平台享每日首单券"),
+):
+    return _compute_comparison(unit_id, qty, include_delivery, first_order)
+
+
+@app.post("/export")
+def export_pdf(payload: dict = Body(..., description='{"items":[{"unit_id","qty","include_delivery","first_order"}]}')):
+    """把一组比价结果导出为带时间戳的 PDF（附件下载）。
+
+    items 为界面累积的会话比价记录；服务端按同一算价逻辑重算，保证 PDF 与
+    界面一致。文件名与页眉均带时间戳。
+    """
+    items = payload.get("items") or []
+    if not items:
+        raise HTTPException(status_code=400, detail="没有可导出的比价结果")
+    if len(items) > 100:
+        raise HTTPException(status_code=400, detail="单次导出最多 100 项")
+
+    results = []
+    for it in items:
+        uid = it.get("unit_id")
+        if not uid:
+            continue
+        results.append(_compute_comparison(
+            uid,
+            qty=int(it.get("qty", 1) or 1),
+            include_delivery=bool(it.get("include_delivery", True)),
+            first_order=str(it.get("first_order", "")),
+        ))
+    if not results:
+        raise HTTPException(status_code=400, detail="没有有效的比价条目")
+
+    now = datetime.now(_CST)
+    ts_display = now.strftime("%Y-%m-%d %H:%M:%S")
+    ts_file = now.strftime("%Y%m%d_%H%M%S")
+    pdf = build_comparison_pdf(results, ts_display, price_as_of=store.snapshot_at_iso)
+
+    filename = f"比价结果_{ts_file}.pdf"
+    from urllib.parse import quote
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={
+            # filename* 用 RFC5987 编码中文名，兼容各浏览器下载
+            "Content-Disposition": f"attachment; filename=comparison_{ts_file}.pdf; "
+                                   f"filename*=UTF-8''{quote(filename)}",
+            "X-Export-Timestamp": ts_file,
+        },
+    )
 
 
 # ---- 界面入口 -------------------------------------------------------------

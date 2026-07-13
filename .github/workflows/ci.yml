@@ -48,3 +48,4 @@ jobs:
           node tests/e2e/load_more.spec.mjs "$CHROME"
           node tests/e2e/geo_mobile.spec.mjs "$CHROME"
           node tests/e2e/discover.spec.mjs "$CHROME"
+          node tests/e2e/export_pdf.spec.mjs "$CHROME"

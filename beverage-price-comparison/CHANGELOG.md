@@ -5,6 +5,14 @@
 
 > 测试计数随版本变化（部分版本因参数化用例随数据构成收敛而下降，属正常——见 v0.4.2）。
 
+## [v0.7.0] 比价结果导出 PDF（带时间戳）
+- **`POST /export`**：接收会话累积的比价记录，服务端用 reportlab（内置中文字体 STSong-Light）渲染真实 PDF，附件下载；**文件名与页眉均带时间戳**（东八区），最便宜行高亮、逐项明细表。
+- **前端**：`app.html` 与 `discover.html` 新增「导出比价结果 PDF」按钮 + 会话比价记录累积（同商品同参数去重）+ 已比价计数 + 清空；无记录时按钮隐藏。
+- **重构**：`/compare` 比价编排抽出 `_compute_comparison` 辅助，`/compare` 与 `/export` 共用（避免逻辑重复）。
+- 依赖新增 `reportlab==5.0.0`。
+- `tests/test_export.py` 8 项（PDF 头合法/多项/时间戳文件名/空→400/未知单元→404/超限→400/参数一致）+ `tests/e2e/export_pdf.spec.mjs`（并入 CI）。测试 117 项 pytest 全绿。
+- 修复 CSS 特性：`.exportbar` 类选择器盖过 `[hidden]` UA 样式导致无法隐藏 → 补 `.exportbar[hidden]{display:none}`。
+
 ## [v0.6.0] 商户发现界面 + 双云发布流水线
 - **商户发现 API `GET /api/discover`**：模糊商户搜索（商户上限 20、网格过滤 + 地点排名）+ 命中商户下商品扁平化**分页**（100/页），返回 merchant_total/product_total。
 - **商户发现界面 `/discover`（web/discover.html）**：清晰三步流程（定位→模糊搜商户→商品分页），商户 chip 钻取、上/下一页、内联比价；GPS 授权/网格过滤/手机平板适配沿用 v0.5.x。

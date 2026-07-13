@@ -81,6 +81,16 @@
   .pchip:focus:not(:focus-visible){outline:none;}
   .pchip .pn{color:var(--muted);margin-left:4px;font-size:11px;}
   .agg .empty-m{font-size:12px;color:var(--muted);margin-top:10px;}
+  .exportbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 2px;padding:10px 14px;
+    background:var(--accent-soft);border:1px solid var(--accent);border-radius:11px;}
+  .exportbar[hidden]{display:none;}   /* 类选择器会盖过 [hidden] 的 UA 样式，需显式隐藏 */
+  .exportbar .ec{font-size:13px;font-weight:600;color:var(--accent);}
+  .exportbtn{padding:8px 18px;min-height:40px;border:none;border-radius:9px;background:var(--accent);
+    color:var(--accent-ink);font-weight:650;font-size:13.5px;cursor:pointer;}
+  .exportbtn:disabled{opacity:.6;cursor:wait;}
+  .exportbtn:focus{outline:2px solid var(--ink);outline-offset:2px;} .exportbtn:focus:not(:focus-visible){outline:none;}
+  .clearbtn{padding:8px 12px;min-height:40px;border:1px solid var(--line);border-radius:9px;background:var(--surface);
+    color:var(--muted);font-size:12.5px;cursor:pointer;}
   .meta-line{font-size:12px;color:var(--muted);margin:8px 2px 0;}
   .morebtn{padding:9px 26px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface);
     color:var(--accent);font-weight:600;cursor:pointer;min-height:40px;}
@@ -177,6 +187,12 @@
     <div class="agg-head">🏪 商户直达<span class="hint">输入商户名，实时聚合该商户的全部商品</span></div>
     <input id="mq" type="text" placeholder="如：永辉 / 罗森 / 便利 / 蜜雪冰城 / 星巴克…">
     <div id="mgroups"></div>
+  </div>
+
+  <div id="exportbar" class="exportbar" hidden>
+    <span id="exportcount" class="ec"></span>
+    <button id="exportbtn" class="exportbtn" onclick="exportPdf()">⬇ 导出比价结果 PDF</button>
+    <button class="clearbtn" onclick="clearHistory()">清空</button>
   </div>
 
   <div id="meta" class="meta-line"></div>
@@ -406,12 +422,57 @@ async function doCompare(id){
       <div class="cols">${cols}</div>
       ${savings}
     </div>`;
+  recordComparison(id, qty, inc, foParam(), d);   // 累积到导出记录
   const el = document.getElementById('detail');
   const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   try{ el.scrollIntoView({behavior: reduced?'auto':'smooth', block:'nearest'}); }catch(e){ el.scrollIntoView(false); }
 }
 
 function recompare(){ if(currentUnit) doCompare(currentUnit); }
+
+/* ===== 会话比价记录 + 导出 PDF ===== */
+let compareHistory = [];   // [{unit_id,qty,include_delivery,first_order,name,merchant}]
+function recordComparison(id, qty, inc, fo, d){
+  // 同一商品+同参数只保留一条（最新覆盖），避免重复导出
+  const key = `${id}|${qty}|${inc}|${fo}`;
+  compareHistory = compareHistory.filter(x => x.key !== key);
+  compareHistory.push({key, unit_id:id, qty, include_delivery:inc, first_order:fo,
+                       name:d.beverage.name, merchant:d.beverage.merchant});
+  renderExportBar();
+}
+function renderExportBar(){
+  const bar = document.getElementById('exportbar');
+  if(!compareHistory.length){ bar.hidden = true; return; }
+  bar.hidden = false;
+  document.getElementById('exportcount').textContent = `已比价 ${compareHistory.length} 项，可导出为 PDF（带时间戳）`;
+}
+function clearHistory(){ compareHistory = []; renderExportBar(); }
+
+async function exportPdf(){
+  if(!compareHistory.length) return;
+  const btn = document.getElementById('exportbtn');
+  btn.disabled = true; const label = btn.textContent; btn.textContent = '⬇ 生成中…';
+  try{
+    const resp = await fetch('/export', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({items: compareHistory.map(x=>({
+        unit_id:x.unit_id, qty:x.qty, include_delivery:x.include_delivery, first_order:x.first_order}))}),
+    });
+    if(!resp.ok){ throw new Error('导出失败 '+resp.status); }
+    // 从响应头取带时间戳的文件名
+    const cd = resp.headers.get('content-disposition') || '';
+    const m = cd.match(/filename\*=UTF-8''([^;]+)/) || cd.match(/filename="?([^";]+)"?/);
+    const fname = m ? decodeURIComponent(m[1]) : `比价结果_${(resp.headers.get('x-export-timestamp')||'')}.pdf`;
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }catch(e){
+    alert('导出 PDF 失败：'+e.message+'（请重试）');
+  }finally{
+    btn.disabled = false; btn.textContent = label;
+  }
+}
 document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
 doSearch();
 </script>

@@ -116,6 +116,16 @@
   .bd .row .amt{font-variant-numeric:tabular-nums;color:var(--ink);}
   .bd .row.minus .amt{color:var(--best);}
   .save{margin-top:11px;font-weight:650;font-size:13px;color:var(--best);}
+  .exportbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 2px;padding:10px 14px;
+    background:var(--accent-soft);border:1px solid var(--accent);border-radius:11px;}
+  .exportbar[hidden]{display:none;}   /* 类选择器会盖过 [hidden] 的 UA 样式，需显式隐藏 */
+  .exportbar .ec{font-size:13px;font-weight:600;color:var(--accent);}
+  .exportbtn{padding:8px 18px;min-height:40px;border:none;border-radius:9px;background:var(--accent);
+    color:var(--accent-ink);font-weight:650;font-size:13.5px;cursor:pointer;}
+  .exportbtn:disabled{opacity:.6;cursor:wait;}
+  .exportbtn:focus{outline:2px solid var(--ink);outline-offset:2px;} .exportbtn:focus:not(:focus-visible){outline:none;}
+  .clearbtn{padding:8px 12px;min-height:40px;border:1px solid var(--line);border-radius:9px;background:var(--surface);
+    color:var(--muted);font-size:12.5px;cursor:pointer;}
   footer{margin-top:34px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;}
 
   @media (min-width:641px) and (max-width:1024px){ .cols{grid-template-columns:repeat(2,1fr);} }
@@ -166,6 +176,11 @@
   <div id="products" class="plist"></div>
   <div id="pager" class="pager"></div>
 
+  <div id="exportbar" class="exportbar" hidden>
+    <span id="exportcount" class="ec"></span>
+    <button id="exportbtn" class="exportbtn" onclick="exportPdf()">⬇ 导出比价结果 PDF</button>
+    <button class="clearbtn" onclick="clearHistory()">清空</button>
+  </div>
   <div id="detail"></div>
 
   <footer>商户最多显示 20 家（按地点排名）· 商品每页 100 个分页 · 演示数据（Mock），非真实价格。</footer>
@@ -309,9 +324,40 @@ async function doCompare(id){
     <div class="cmp"><h2>${d.beverage.name}</h2>
       <div class="sub">🏪 ${d.beverage.merchant} · 同商户跨平台比价</div>
       <div class="cols">${cols}</div>${save}</div>`;
+  recordComparison(id, d);
   const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   try{ document.getElementById('detail').scrollIntoView({behavior:reduced?'auto':'smooth',block:'nearest'}); }
   catch(e){ document.getElementById('detail').scrollIntoView(false); }
+}
+
+/* ===== 会话比价记录 + 导出 PDF ===== */
+let compareHistory = [];
+function recordComparison(id, d){
+  const key = id;   // discover 固定 qty=1/含配送，按商品去重
+  compareHistory = compareHistory.filter(x => x.key !== key);
+  compareHistory.push({key, unit_id:id, qty:1, include_delivery:true, first_order:'',
+                       name:d.beverage.name, merchant:d.beverage.merchant});
+  const bar = document.getElementById('exportbar');
+  bar.hidden = false;
+  document.getElementById('exportcount').textContent = `已比价 ${compareHistory.length} 项，可导出为 PDF（带时间戳）`;
+}
+function clearHistory(){ compareHistory = []; document.getElementById('exportbar').hidden = true; }
+async function exportPdf(){
+  if(!compareHistory.length) return;
+  const btn = document.getElementById('exportbtn'); const label = btn.textContent;
+  btn.disabled = true; btn.textContent = '⬇ 生成中…';
+  try{
+    const resp = await fetch('/export', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({items: compareHistory.map(x=>({unit_id:x.unit_id, qty:x.qty,
+        include_delivery:x.include_delivery, first_order:x.first_order}))})});
+    if(!resp.ok) throw new Error('导出失败 '+resp.status);
+    const cd = resp.headers.get('content-disposition')||'';
+    const m = cd.match(/filename\*=UTF-8''([^;]+)/) || cd.match(/filename="?([^";]+)"?/);
+    const fname = m ? decodeURIComponent(m[1]) : `比价结果_${resp.headers.get('x-export-timestamp')||''}.pdf`;
+    const blob = await resp.blob(); const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }catch(e){ alert('导出 PDF 失败：'+e.message); }
+  finally{ btn.disabled=false; btn.textContent=label; }
 }
 
 fetch('/grids').then(r=>r.json()).then(d=>{ GRID_LIST=d.grids; renderGrids(); load(); });

@@ -15,6 +15,7 @@
 | `matching.py` | 匹配引擎，单元键=`商户+条码|品名规格`，归一化、搜索 | 归一化器吸收 `/`、空格、全角空格 |
 | `pricing.py` | 到手价引擎；优惠顺序 `_KIND_ORDER` | 每项减免封顶于应付（到手价恒非负）——勿删这个 min() |
 | `geo.py` | 网格解析 + 排名分（0.35覆盖+0.25销量+0.20距离+0.20评分）| 排名分必须与公示因子加权一致（有测试锁）|
+| `export_pdf.py` | 比价结果 → PDF（reportlab + 内置中文字体 STSong-Light，带时间戳）| `/compare` 与 `/export` 共用 `_compute_comparison` 辅助（main.py）|
 | `adapters/` | 平台适配层（可插拔），当前 Mock 读 SQLite | 接真实数据只换这层，上层零改动 |
 
 ### 数据源（Mock，固定种子可复现）
