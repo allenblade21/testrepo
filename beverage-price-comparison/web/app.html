@@ -213,24 +213,54 @@ function toggleLocPanel(force){
   p.classList.toggle('open', open);
 }
 
-function useMyLocation(){
+// 点击后：显式向浏览器申请定位权限（Permissions API 预探测 + 原生授权弹窗）
+async function useMyLocation(){
   const btn = document.getElementById('gpsbtn');
   const msg = document.getElementById('locmsg');
-  if(!navigator.geolocation){ msg.textContent = '当前浏览器不支持定位，请手动选择商圈'; return; }
-  btn.disabled = true; btn.textContent = '⊕ 定位中…';
+  msg.textContent = '';
+  if(!('geolocation' in navigator)){
+    msg.textContent = '当前浏览器不支持定位，请手动选择商圈'; return;
+  }
+  // 非安全上下文（http）下浏览器会静默拒绝定位——提前说明
+  if(window.isSecureContext === false){
+    msg.textContent = '定位需要 HTTPS 安全环境，当前页面不安全，请手动选择商圈'; return;
+  }
+  // 预探测权限状态：已拒绝时浏览器不会再弹窗，直接给指引
+  if(navigator.permissions && navigator.permissions.query){
+    try{
+      const st = await navigator.permissions.query({ name: 'geolocation' });
+      if(st.state === 'denied'){
+        msg.textContent = '定位权限已被浏览器拒绝：请点击地址栏 🔒 图标 → 允许「位置」→ 刷新页面重试，或直接手动选择商圈';
+        return;
+      }
+    }catch(e){ /* 部分浏览器不支持查询 geolocation，忽略，走原生请求 */ }
+  }
+  btn.disabled = true; btn.textContent = '⊕ 正在申请定位权限…';
   navigator.geolocation.getCurrentPosition(
     async pos => {
       // 坐标只用于本次网格解析，不存储（隐私最小化）
-      const r = await fetch(`/grid/resolve?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`);
-      const d = await r.json();
+      let d;
+      try{
+        const r = await fetch(`/grid/resolve?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`);
+        d = await r.json();
+      }catch(e){
+        btn.disabled = false; btn.textContent = '⊕ 使用当前位置（GPS）';
+        msg.textContent = '网络异常，位置解析失败，请重试或手动选择商圈'; return;
+      }
       btn.disabled = false; btn.textContent = '⊕ 使用当前位置（GPS）';
       if(d.in_service){ setGrid(d.grid_id, d.grid_name); }
       else { msg.textContent = d.message; }
     },
     err => {
       btn.disabled = false; btn.textContent = '⊕ 使用当前位置（GPS）';
-      msg.textContent = err.code === 1 ? '定位授权被拒绝，请手动选择商圈'
-                       : '定位失败（' + err.message + '），请手动选择商圈';
+      // 1=拒绝授权 2=位置不可用 3=超时
+      if(err.code === 1){
+        msg.textContent = '你拒绝了定位授权，请手动选择商圈（如需重新授权：地址栏 🔒 → 允许位置 → 刷新）';
+      }else if(err.code === 3){
+        msg.textContent = '定位超时，请重试或手动选择商圈';
+      }else{
+        msg.textContent = '定位失败（' + (err.message || '位置不可用') + '），请手动选择商圈';
+      }
     },
     { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
   );
