@@ -119,6 +119,12 @@
   .empty{color:var(--muted);text-align:center;padding:34px 0;}
   footer{margin-top:34px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;}
 
+  /* 平板（iPad/Android pad）Chrome：两列比价 + 位置面板留白适中 */
+  @media (min-width:641px) and (max-width:1024px){
+    .cols{grid-template-columns:repeat(2,1fr);}
+    .locpanel{padding:14px 16px;}
+    .gridchip{min-height:40px;}
+  }
   @media (max-width:640px){
     .head-in,.wrap{padding-left:max(14px, env(safe-area-inset-left));padding-right:max(14px, env(safe-area-inset-right));}
     .head-in{padding-top:16px;padding-bottom:14px;}
@@ -127,6 +133,13 @@
     .controls label{min-height:44px;}
     .cmp{padding:14px;}
     .col .price{font-size:23px;}
+    /* 位置胶囊：窄屏允许换行到标题下一行，避免挤压标题 */
+    .locpill{margin-left:0;margin-top:8px;display:flex;width:fit-content;min-height:36px;}
+    .head-in h1{display:block;}
+    /* 面板：全宽、GPS 按钮与商圈 chip 触控友好，过高时可滚 */
+    .locpanel{padding:12px;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+    .gpsbtn{font-size:15px;}
+    .gridchip{min-height:40px;padding:9px 14px;}
   }
   @media (max-width:480px){ .cols{grid-template-columns:1fr;} }
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -181,8 +194,13 @@ const yuan = c => "¥"+(c/100).toFixed(2);
 let currentUnit = null;
 
 /* ===== 位置：GPS / 商圈网格（PRD FR-B1 三级降级）===== */
-let curGrid = localStorage.getItem('grid') || '';        // ''=不限位置
-let curGridName = localStorage.getItem('gridName') || '';
+// localStorage 在内嵌/隐私模式/被禁用存储时会抛异常——安全封装，失败降级为内存态
+const safeStore = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+};
+let curGrid = safeStore.get('grid') || '';        // ''=不限位置
+let curGridName = safeStore.get('gridName') || '';
 let GRID_LIST = [];
 
 function gridParam(){ return curGrid ? '&grid=' + encodeURIComponent(curGrid) : ''; }
@@ -198,7 +216,7 @@ function renderLocState(){
 
 function setGrid(id, name){
   curGrid = id; curGridName = name;
-  localStorage.setItem('grid', id); localStorage.setItem('gridName', name);
+  safeStore.set('grid', id); safeStore.set('gridName', name);
   document.getElementById('locmsg').textContent = '';
   renderLocState();
   toggleLocPanel(false);
@@ -220,6 +238,12 @@ async function useMyLocation(){
   msg.textContent = '';
   if(!('geolocation' in navigator)){
     msg.textContent = '当前浏览器不支持定位，请手动选择商圈'; return;
+  }
+  // 被嵌入（iframe/预览/内嵌浏览器）时，浏览器默认按 Permissions Policy
+  // 禁止定位、且通常连授权弹窗都不出现——这是最具体的原因，优先给出指引
+  if(window.self !== window.top){
+    msg.textContent = '当前为嵌入/预览页面，浏览器默认禁止内嵌页申请定位。请在独立标签页打开本站再定位，或直接手动选择商圈 👇';
+    return;
   }
   // 非安全上下文（http）下浏览器会静默拒绝定位——提前说明
   if(window.isSecureContext === false){

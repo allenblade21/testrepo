@@ -46,3 +46,4 @@ jobs:
           for i in $(seq 1 20); do curl -sf http://127.0.0.1:8077/health && break; sleep 1; done
           CHROME=$(node -e "console.log(require('playwright').chromium.executablePath())")
           node tests/e2e/load_more.spec.mjs "$CHROME"
+          node tests/e2e/geo_mobile.spec.mjs "$CHROME"
