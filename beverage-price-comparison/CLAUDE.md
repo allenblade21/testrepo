@@ -22,9 +22,11 @@
 - `catalog_data.py`：生成目录（勿手改），由 `tools/generate_catalog.py` + `tools/fill_platform_gaps.py` 产出。
 - `geo_data.py`：4 商圈网格 + 16 商户坐标/评分/月售。
 
-### 前端 `web/`（双入口）
-- `app.html`：入口2 正式客户界面（搜索/定位胶囊/首单券/比价）。
-- `test.html`：入口1 测试+报表控制台（S1–S10 自动报表）。
+### 前端 `web/`（三入口）
+- `app.html`（`/`）：正式客户比价界面（搜索/定位胶囊/首单券/比价）。
+- `discover.html`（`/discover`）：商户发现界面（GPS+模糊搜商户+商品分页+内联比价），调 `/api/discover`。
+- `test.html`（`/test`）：测试+报表控制台（S1–S10 自动报表）。
+- **注意路由**：`/discover` 是页面，`/api/discover` 是数据 API（勿再让页面与 API 同路径，否则 FastAPI 路由冲突）。
 - **Artifact Demo**（scratchpad 里的 `beverage-demo.html`）是同构 JS 副本，改前端逻辑要同步它并重新发布。
 
 ### 测试 `tests/`

@@ -1,0 +1,91 @@
+name: Deploy · 阿里云（Aliyun）
+
+# 触发：推 main 或手动。发布前置条件是 CI（ci.yml）通过——生产分支请配分支保护。
+on:
+  push:
+    branches: ["main"]
+    paths: ["beverage-price-comparison/**"]
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: beverage-price-comparison
+
+# 需在仓库 Settings → Secrets and variables → Actions 配置以下 Secrets：
+#   ALIYUN_ACR_REGISTRY     容器镜像服务地址，如 registry.cn-hangzhou.aliyuncs.com
+#   ALIYUN_ACR_NAMESPACE    命名空间
+#   ALIYUN_ACR_USERNAME / ALIYUN_ACR_PASSWORD   ACR 登录凭证（子账号 AK 或临时口令）
+#   ALIYUN_ACCESS_KEY_ID / ALIYUN_ACCESS_KEY_SECRET   RAM 子账号 AK（OSS/部署用）
+#   ALIYUN_OSS_BUCKET       前端静态托管 Bucket，如 bpc-web
+#   ALIYUN_OSS_ENDPOINT     如 oss-cn-hangzhou.aliyuncs.com
+#   ALIYUN_SAE_APP_ID       （可选）Serverless 应用引擎 SAE 应用 ID，用于滚动部署后端
+
+jobs:
+  # ---- 后端：构建镜像 → 推 ACR → 触发 SAE 滚动部署 --------------------------
+  backend:
+    name: 后端 → 阿里云 ACR / SAE
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 登录阿里云容器镜像服务 ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ALIYUN_ACR_REGISTRY }}
+          username: ${{ secrets.ALIYUN_ACR_USERNAME }}
+          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+
+      - name: 构建并推送镜像
+        uses: docker/build-push-action@v6
+        with:
+          context: beverage-price-comparison
+          push: true
+          tags: |
+            ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.ALIYUN_ACR_NAMESPACE }}/beverage-price-comparison:${{ github.sha }}
+            ${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.ALIYUN_ACR_NAMESPACE }}/beverage-price-comparison:latest
+
+      - name: 安装阿里云 CLI
+        run: |
+          curl -sL https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz | tar xz
+          sudo mv aliyun /usr/local/bin/
+          aliyun configure set \
+            --access-key-id "${{ secrets.ALIYUN_ACCESS_KEY_ID }}" \
+            --access-key-secret "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}" \
+            --region cn-hangzhou
+
+      - name: 触发 SAE 滚动部署（若配置了 SAE_APP_ID）
+        if: ${{ secrets.ALIYUN_SAE_APP_ID != '' }}
+        run: |
+          IMAGE="${{ secrets.ALIYUN_ACR_REGISTRY }}/${{ secrets.ALIYUN_ACR_NAMESPACE }}/beverage-price-comparison:${{ github.sha }}"
+          aliyun sae POST /pop/v1/sam/app/deployApplication \
+            --AppId "${{ secrets.ALIYUN_SAE_APP_ID }}" \
+            --ImageUrl "$IMAGE"
+          echo "已提交 SAE 部署：$IMAGE"
+
+      - name: 未配置 SAE 时的提示
+        if: ${{ secrets.ALIYUN_SAE_APP_ID == '' }}
+        run: echo "镜像已推送到 ACR；未配置 SAE_APP_ID，请在 SAE/ACK/ECS 侧手动或另配置滚动更新到该镜像。"
+
+  # ---- 前端：静态文件 → OSS → 刷新 CDN --------------------------------------
+  frontend:
+    name: 前端 → 阿里云 OSS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 ossutil
+        run: |
+          curl -sL https://gosspublic.alicdn.com/ossutil/1.7.19/ossutil64 -o ossutil
+          chmod +x ossutil
+          ./ossutil config \
+            -e "${{ secrets.ALIYUN_OSS_ENDPOINT }}" \
+            -i "${{ secrets.ALIYUN_ACCESS_KEY_ID }}" \
+            -k "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}"
+
+      - name: 同步前端静态文件到 OSS
+        run: |
+          # 当前前端为纯静态 HTML（app/discover/test），直接同步 web/ 目录
+          ./ossutil cp -rf web/ "oss://${{ secrets.ALIYUN_OSS_BUCKET }}/" \
+            --include "*.html" --meta "Cache-Control:no-cache"
+          echo "前端已同步到 OSS Bucket ${{ secrets.ALIYUN_OSS_BUCKET }}"
+          # 若前端走 CDN，需在此追加 CDN 刷新（RefreshObjectCaches），按你的加速域名配置。

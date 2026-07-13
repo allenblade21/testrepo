@@ -35,10 +35,13 @@ docker compose up --build   # 端口 8077；环境变量见 .env.example
 
 生产化能力（v0.4.1，配置全部环境变量驱动）：数据快照定时刷新（`REFRESH_INTERVAL_S`）+ 手动刷新（`POST /admin/refresh`，`ADMIN_TOKEN` 保护）、`/metrics` 延迟指标（P50/P95/P99）、请求限流（`RATE_LIMIT_PER_MIN`，`/health` 豁免）、CORS（`CORS_ORIGINS`）、`/compare` 返回 `price_as_of` 价格新鲜度。CI 见 `.github/workflows/ci.yml`（push/PR 自动跑全量测试 + E2E）。上线路线见 [docs/上线计划.md](docs/上线计划.md)。
 
-两个界面入口：
+三个界面入口：
 
-- **`/`** — 正式客户使用界面（搜索、每日首单券勾选、三平台并排比价）
-- **`/test`** — 测试 + 报表控制台（系统状态、S1–S9 自动化场景报表、交互测试台）
+- **`/`** — 正式客户比价界面（搜索、每日首单券、三平台并排比价）
+- **`/discover`** — 商户发现界面（GPS 定位 + 模糊搜商户 + 商品分页 + 内联比价）
+- **`/test`** — 测试 + 报表控制台（系统状态、S1–S10 自动化场景报表、交互测试台）
+
+部署流水线（阿里云 / 火山云双云适配）见 [docs/部署流水线.md](docs/部署流水线.md)。
 
 搜索「可乐 / 永辉 / 罗森 / 元气森林 / 喜茶 / 瑞幸」试试（商品名和商户名都能搜）。
 

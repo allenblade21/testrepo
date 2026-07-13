@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>商户发现 · 饮品比价</title>
+<style>
+  :root{
+    --bg:#f4f7f8; --surface:#fff; --line:#dfe7e9; --ink:#152529; --muted:#5c7076;
+    --accent:#0d7f8c; --accent-soft:#e3f2f4; --accent-ink:#fff;
+    --price:#d4520a; --best:#0e8a45; --merch-bg:#faf0d8; --merch-ink:#7d5a10;
+    --fo:#7c3f9d; --tag-bg:#eef2f4; --tag-ink:#41565d; --shadow:0 2px 12px rgba(21,37,41,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f191c; --surface:#16242a; --line:#26383f; --ink:#e4edef; --muted:#8da2a8;
+      --accent:#43bfcd; --accent-soft:#12333a; --accent-ink:#08272c; --price:#ff8b52; --best:#4cc97e;
+      --merch-bg:#38300f; --merch-ink:#e3c56e; --fo:#c99ae8; --tag-bg:#1e3038; --tag-ink:#a7bcc2;
+      --shadow:0 2px 12px rgba(0,0,0,.35); }
+  }
+  :root[data-theme="dark"]{ --bg:#0f191c; --surface:#16242a; --line:#26383f; --ink:#e4edef; --muted:#8da2a8;
+    --accent:#43bfcd; --accent-soft:#12333a; --accent-ink:#08272c; --price:#ff8b52; --best:#4cc97e;
+    --merch-bg:#38300f; --merch-ink:#e3c56e; --fo:#c99ae8; --tag-bg:#1e3038; --tag-ink:#a7bcc2;
+    --shadow:0 2px 12px rgba(0,0,0,.35); }
+  :root[data-theme="light"]{ --bg:#f4f7f8; --surface:#fff; --line:#dfe7e9; --ink:#152529; --muted:#5c7076;
+    --accent:#0d7f8c; --accent-soft:#e3f2f4; --accent-ink:#fff; --price:#d4520a; --best:#0e8a45;
+    --merch-bg:#faf0d8; --merch-ink:#7d5a10; --fo:#7c3f9d; --tag-bg:#eef2f4; --tag-ink:#41565d;
+    --shadow:0 2px 12px rgba(21,37,41,.06); }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;
+    font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-tap-highlight-color:transparent;}
+  button{touch-action:manipulation;font:inherit;cursor:pointer;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 56px;
+    padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right));}
+
+  header{border-bottom:1px solid var(--line);background:var(--surface);}
+  .head-in{max-width:960px;margin:0 auto;padding:18px 20px 16px;
+    padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right));}
+  .brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .brand h1{margin:0;font-size:19px;font-weight:750;letter-spacing:.01em;}
+  .brand .nav{margin-left:auto;font-size:12.5px;}
+  .brand .nav a{color:var(--accent);text-decoration:none;}
+  .brand .sub{width:100%;color:var(--muted);font-size:12.5px;margin-top:2px;}
+
+  /* 步骤标签：编码真实流程（1 定位 → 2 搜商户 → 3 看商品）*/
+  .step{display:flex;align-items:baseline;gap:8px;margin:22px 0 9px;}
+  .step .n{font-size:11px;font-weight:700;color:var(--accent-ink);background:var(--accent);
+    width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .step .t{font-size:13px;font-weight:650;}
+  .step .hint{font-size:11.5px;color:var(--muted);}
+
+  /* 定位胶囊 */
+  .locrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .gpsbtn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;min-height:40px;border-radius:10px;
+    border:1.5px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:13.5px;}
+  .gpsbtn:disabled{opacity:.6;cursor:wait;}
+  .gpsbtn:focus{outline:2px solid var(--accent);outline-offset:1px;} .gpsbtn:focus:not(:focus-visible){outline:none;}
+  .gridchip{padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);
+    color:var(--ink);font-size:12.5px;min-height:36px;}
+  .gridchip.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:650;}
+  .gridchip:focus{outline:2px solid var(--accent);outline-offset:1px;} .gridchip:focus:not(:focus-visible){outline:none;}
+  .locmsg{width:100%;font-size:11.5px;color:var(--price);margin-top:2px;}
+
+  /* 搜索 */
+  .searchrow{display:flex;gap:8px;}
+  .searchrow input{flex:1;min-width:0;padding:11px 14px;font-size:15px;border:1.5px solid var(--line);
+    border-radius:11px;background:var(--surface);color:var(--ink);}
+  .searchrow input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+
+  /* 匹配商户 chips */
+  .mrow{display:flex;gap:8px;flex-wrap:wrap;}
+  .mchip{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;
+    padding:9px 13px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);
+    box-shadow:var(--shadow);min-height:44px;}
+  .mchip:hover{border-color:var(--accent);}
+  .mchip.on{border-color:var(--accent);background:var(--accent-soft);}
+  .mchip:focus{outline:2px solid var(--accent);outline-offset:1px;} .mchip:focus:not(:focus-visible){outline:none;}
+  .mchip .mn{font-weight:650;font-size:13px;color:var(--ink);}
+  .mchip .mm{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .mchip .rk{color:var(--accent);font-weight:600;}
+  .mchip.all{justify-content:center;align-items:center;color:var(--accent);font-weight:650;}
+  .mcap{font-size:11.5px;color:var(--muted);margin-top:7px;}
+
+  /* 商品分页列表 */
+  .plist{display:grid;gap:7px;margin-top:4px;}
+  .pitem{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 14px;
+    background:var(--surface);border:1px solid var(--line);border-radius:11px;color:inherit;box-shadow:var(--shadow);}
+  .pitem:hover,.pitem.active{border-color:var(--accent);}
+  .pitem:focus{outline:2px solid var(--accent);outline-offset:1px;} .pitem:focus:not(:focus-visible){outline:none;}
+  .pitem .pname{font-weight:600;font-size:14px;flex:1;min-width:0;}
+  .pitem .pmeta{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .pitem .tag{font-size:10.5px;padding:1px 7px;border-radius:99px;background:var(--tag-bg);color:var(--tag-ink);white-space:nowrap;}
+  .pitem .tag.merch{background:var(--merch-bg);color:var(--merch-ink);}
+  .pager{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:14px;font-size:13px;color:var(--muted);}
+  .pgbtn{padding:8px 16px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--accent);
+    font-weight:600;min-height:38px;}
+  .pgbtn:disabled{opacity:.4;cursor:default;color:var(--muted);}
+  .empty{color:var(--muted);text-align:center;padding:30px 0;}
+
+  /* 内联比价面板 */
+  .cmp{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:16px;margin-top:14px;box-shadow:var(--shadow);}
+  .cmp h2{margin:0;font-size:16px;} .cmp .sub{color:var(--muted);font-size:12px;margin:3px 0 12px;}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+  .col{border:1px solid var(--line);border-radius:11px;padding:12px 13px;position:relative;}
+  .col.best{border-color:var(--best);background:color-mix(in srgb,var(--best) 8%,transparent);}
+  .col.off{opacity:.6;}
+  .col .plat{font-weight:650;font-size:13px;}
+  .col .price{font-size:24px;font-weight:750;color:var(--price);margin:6px 0 2px;font-variant-numeric:tabular-nums;}
+  .col .price small{font-size:11px;font-weight:500;color:var(--muted);margin-left:3px;}
+  .col .no{color:var(--price);font-size:11px;margin-bottom:3px;}
+  .badge{position:absolute;top:-9px;right:10px;background:var(--best);color:#fff;font-size:10px;font-weight:600;padding:2px 9px;border-radius:99px;}
+  .bd{border-top:1px dashed var(--line);margin-top:8px;padding-top:7px;font-size:11.5px;}
+  .bd .row{display:flex;justify-content:space-between;gap:8px;padding:1px 0;color:var(--muted);}
+  .bd .row .amt{font-variant-numeric:tabular-nums;color:var(--ink);}
+  .bd .row.minus .amt{color:var(--best);}
+  .save{margin-top:11px;font-weight:650;font-size:13px;color:var(--best);}
+  footer{margin-top:34px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;}
+
+  @media (min-width:641px) and (max-width:1024px){ .cols{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:640px){
+    .head-in{padding-top:14px;}
+    .brand h1{font-size:17px;}
+    .searchrow input{font-size:16px;}
+    .cmp{padding:13px;}
+    .mchip{flex:1 1 auto;}
+  }
+  @media (max-width:480px){ .cols{grid-template-columns:1fr;} }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-in">
+    <div class="brand">
+      <h1>🔎 商户发现</h1>
+      <span class="nav"><a href="/">← 比价首页</a></span>
+      <div class="sub">按位置找附近商户 · 模糊搜商户名 · 看它家全部饮品 · 点商品即比价</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- 1 定位 -->
+  <div class="step"><span class="n">1</span><span class="t">你的位置</span>
+    <span class="hint" id="lochint">定位后只显示可送达的商户</span></div>
+  <div class="locrow">
+    <button class="gpsbtn" id="gpsbtn" onclick="useMyLocation()">⊕ 使用当前位置（GPS）</button>
+    <span id="gridchips" class="mrow" style="gap:7px"></span>
+    <span class="locmsg" id="locmsg"></span>
+  </div>
+
+  <!-- 2 搜索商户 -->
+  <div class="step"><span class="n">2</span><span class="t">搜索商户</span>
+    <span class="hint">支持模糊，如「便利」「茶」「永辉」</span></div>
+  <div class="searchrow">
+    <input id="mq" type="text" placeholder="输入商户名…" autocomplete="off">
+  </div>
+  <div id="merchants" class="mrow" style="margin-top:11px"></div>
+  <div id="mcap" class="mcap"></div>
+
+  <!-- 3 商品 -->
+  <div class="step"><span class="n">3</span><span class="t">商品</span>
+    <span class="hint" id="pcap">点任一商品查看三平台比价</span></div>
+  <div id="products" class="plist"></div>
+  <div id="pager" class="pager"></div>
+
+  <div id="detail"></div>
+
+  <footer>商户最多显示 20 家（按地点排名）· 商品每页 100 个分页 · 演示数据（Mock），非真实价格。</footer>
+</div>
+
+<script>
+const PAGE = 100;
+const yuan = c => "¥"+(c/100).toFixed(2);
+const safeStore = { get(k){try{return localStorage.getItem(k)}catch(e){return null}},
+                    set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
+let curGrid = safeStore.get('grid') || '', curGridName = safeStore.get('gridName') || '';
+let merchantFilter = '';        // 点击商户 chip 后钉住的商户名
+let productOffset = 0;
+let GRID_LIST = [];
+let seq = 0;
+
+// ---- 定位 ----
+function gridParam(){ return curGrid ? '&grid='+encodeURIComponent(curGrid) : ''; }
+function renderGrids(){
+  document.getElementById('gridchips').innerHTML =
+    `<button class="gridchip ${!curGrid?'on':''}" onclick="setGrid('','')">不限位置</button>` +
+    GRID_LIST.map(g=>`<button class="gridchip ${curGrid===g.grid_id?'on':''}"
+      onclick="setGrid('${g.grid_id}','${g.name}')">${g.name}</button>`).join('');
+  document.getElementById('lochint').textContent = curGrid
+    ? `已按「${curGridName}」筛选可送达商户` : '定位后只显示可送达的商户';
+}
+function setGrid(id,name){
+  curGrid=id; curGridName=name; safeStore.set('grid',id); safeStore.set('gridName',name);
+  document.getElementById('locmsg').textContent='';
+  merchantFilter=''; productOffset=0; renderGrids(); load();
+}
+async function useMyLocation(){
+  const btn=document.getElementById('gpsbtn'), msg=document.getElementById('locmsg'); msg.textContent='';
+  if(!('geolocation' in navigator)){ msg.textContent='当前浏览器不支持定位，请手动选择商圈'; return; }
+  if(window.self!==window.top){ msg.textContent='当前为嵌入/预览页面，浏览器默认禁止内嵌页定位。请在独立标签页打开，或手动选择商圈 👇'; return; }
+  if(window.isSecureContext===false){ msg.textContent='定位需要 HTTPS 安全环境，请手动选择商圈'; return; }
+  if(navigator.permissions&&navigator.permissions.query){
+    try{ const st=await navigator.permissions.query({name:'geolocation'});
+      if(st.state==='denied'){ msg.textContent='定位权限已被拒绝：地址栏🔒→允许位置→刷新，或手动选择商圈'; return; } }catch(e){}
+  }
+  btn.disabled=true; btn.textContent='⊕ 正在申请定位权限…';
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    let d; try{ d=await (await fetch(`/grid/resolve?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`)).json(); }
+    catch(e){ btn.disabled=false; btn.textContent='⊕ 使用当前位置（GPS）'; msg.textContent='网络异常，请重试或手动选择商圈'; return; }
+    btn.disabled=false; btn.textContent='⊕ 使用当前位置（GPS）';
+    if(d.in_service){ setGrid(d.grid_id,d.grid_name); } else { msg.textContent=d.message; }
+  }, err=>{
+    btn.disabled=false; btn.textContent='⊕ 使用当前位置（GPS）';
+    msg.textContent = err.code===1?'你拒绝了定位授权，请手动选择商圈（重新授权：地址栏🔒→允许位置→刷新）'
+                     :(err.code===3?'定位超时，请重试或手动选择商圈':'定位失败，请手动选择商圈');
+  }, {enableHighAccuracy:false, timeout:8000, maximumAge:300000});
+}
+
+// ---- 商户 + 商品加载 ----
+function effectiveQ(){ return merchantFilter || document.getElementById('mq').value.trim(); }
+
+async function load(){
+  const my = ++seq;
+  const url = `/api/discover?q=${encodeURIComponent(effectiveQ())}${gridParam()}`
+            + `&merchant_limit=20&product_limit=${PAGE}&product_offset=${productOffset}`;
+  const d = await (await fetch(url)).json();
+  if(my!==seq) return;
+  renderMerchants(d);
+  renderProducts(d);
+}
+
+function renderMerchants(d){
+  const box = document.getElementById('merchants');
+  const cap = document.getElementById('mcap');
+  const searchQ = document.getElementById('mq').value.trim();
+  if(!d.merchants.length){
+    box.innerHTML = `<div class="empty" style="width:100%">${curGrid?curGridName+'内':''}没找到匹配的商户，换个名字试试</div>`;
+    cap.textContent=''; return;
+  }
+  // 钻取态：显示「返回全部」+ 当前商户；否则显示匹配商户列表（≤20）
+  let chips = '';
+  if(merchantFilter){
+    chips = `<button class="mchip all" onclick="clearFilter()">← 返回全部${searchQ?`「${searchQ}」`:''}商户</button>`;
+  }
+  chips += d.merchants.map(m=>`
+    <button class="mchip ${merchantFilter===m.merchant?'on':''}" onclick="pickMerchant('${m.merchant.replace(/'/g,"\\'")}')">
+      <span class="mn">🏪 ${m.merchant}</span>
+      <span class="mm">${m.rank?`<span class="rk">${m.rank.distance_km}km · 排名${m.rank.score.toFixed(2)}</span> · `:''}${m.product_count} 个商品</span>
+    </button>`).join('');
+  box.innerHTML = chips;
+  cap.textContent = merchantFilter ? `已锁定 1 家商户`
+    : `匹配 ${d.merchant_total} 家商户${d.merchant_total>d.merchant_count?`（显示前 ${d.merchant_count} 家）`:''}${curGrid?' · 按地点排名':''}`;
+}
+
+function renderProducts(d){
+  const box = document.getElementById('products');
+  document.getElementById('detail').innerHTML='';
+  if(!d.products.length){ box.innerHTML='<div class="empty">该范围暂无商品</div>'; document.getElementById('pager').innerHTML=''; return; }
+  box.innerHTML = d.products.map(p=>`
+    <button class="pitem" id="p-${p.id}" onclick="doCompare('${p.id}')">
+      <span style="flex:1;min-width:0">
+        <span class="pname">${p.name}</span>
+        <span class="pmeta">🏪 ${p.merchant}</span>
+      </span>
+      <span class="tag">${p.type==='made'?'现制':'瓶装'}</span>
+      <span class="tag">${p.platforms.length}平台</span>
+    </button>`).join('');
+  // 分页器
+  const from = d.product_offset+1, to = d.product_offset+d.product_count;
+  const hasPrev = d.product_offset>0, hasNext = to < d.product_total;
+  document.getElementById('pager').innerHTML =
+    `<button class="pgbtn" onclick="pageBy(-1)" ${hasPrev?'':'disabled'}>← 上一页</button>`
+    + `<span>${from}–${to} / 共 ${d.product_total}</span>`
+    + `<button class="pgbtn" onclick="pageBy(1)" ${hasNext?'':'disabled'}>下一页 →</button>`;
+  document.getElementById('pcap').textContent = `点任一商品查看三平台比价 · 每页 ${PAGE} 个`;
+}
+
+function pageBy(dir){ productOffset = Math.max(0, productOffset + dir*PAGE); load();
+  document.getElementById('products').scrollIntoView({behavior:'smooth',block:'start'}); }
+function pickMerchant(m){ merchantFilter=m; productOffset=0; load(); }
+function clearFilter(){ merchantFilter=''; productOffset=0; load(); }
+
+let mqTimer=null;
+document.getElementById('mq').addEventListener('input',()=>{
+  clearTimeout(mqTimer);
+  mqTimer=setTimeout(()=>{ merchantFilter=''; productOffset=0; load(); }, 250);
+});
+
+// ---- 内联比价（复用 /compare）----
+async function doCompare(id){
+  document.querySelectorAll('.pitem').forEach(e=>e.classList.remove('active'));
+  const el=document.getElementById('p-'+id); if(el) el.classList.add('active');
+  const d = await (await fetch(`/compare?unit_id=${id}&qty=1&include_delivery=true`)).json();
+  const cols = d.platforms.map(p=>`
+    <div class="col ${p.platform===d.cheapest?'best':''} ${p.orderable?'':'off'}">
+      ${p.platform===d.cheapest?'<span class="badge">最便宜</span>':''}
+      <div class="plat">${p.platform}</div>
+      <div class="price">${p.orderable?yuan(p.final_price):'—'}<small>到手</small></div>
+      ${p.note?`<div class="no">${p.note}</div>`:''}
+      <div class="bd">${p.breakdown.map(b=>`<div class="row ${b.amount<0?'minus':''}">
+        <span>${b.label}</span><span class="amt">${b.amount<0?'−':''}${yuan(Math.abs(b.amount))}</span></div>`).join('')}</div>
+    </div>`).join('');
+  const save = (d.savings_vs_max!=null&&d.savings_vs_max>0)
+    ? `<div class="save">✅ 选「${d.cheapest}」最省，比最贵的平台省 ${yuan(d.savings_vs_max)}</div>`:'';
+  document.getElementById('detail').innerHTML = `
+    <div class="cmp"><h2>${d.beverage.name}</h2>
+      <div class="sub">🏪 ${d.beverage.merchant} · 同商户跨平台比价</div>
+      <div class="cols">${cols}</div>${save}</div>`;
+  const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try{ document.getElementById('detail').scrollIntoView({behavior:reduced?'auto':'smooth',block:'nearest'}); }
+  catch(e){ document.getElementById('detail').scrollIntoView(false); }
+}
+
+fetch('/grids').then(r=>r.json()).then(d=>{ GRID_LIST=d.grids; renderGrids(); load(); });
+</script>
+</body>
+</html>

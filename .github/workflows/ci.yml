@@ -47,3 +47,4 @@ jobs:
           CHROME=$(node -e "console.log(require('playwright').chromium.executablePath())")
           node tests/e2e/load_more.spec.mjs "$CHROME"
           node tests/e2e/geo_mobile.spec.mjs "$CHROME"
+          node tests/e2e/discover.spec.mjs "$CHROME"

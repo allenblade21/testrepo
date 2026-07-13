@@ -1,0 +1,86 @@
+name: Deploy · 火山云（VolcEngine）
+
+# 触发：推 main 或手动。发布前置条件是 CI（ci.yml）通过——生产分支请配分支保护。
+on:
+  push:
+    branches: ["main"]
+    paths: ["beverage-price-comparison/**"]
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: beverage-price-comparison
+
+# 需在仓库 Settings → Secrets and variables → Actions 配置以下 Secrets：
+#   VOLC_CR_REGISTRY     火山镜像仓库地址，如 xxx-cn-beijing.cr.volces.com
+#   VOLC_CR_NAMESPACE    命名空间
+#   VOLC_CR_USERNAME / VOLC_CR_PASSWORD   镜像仓库登录凭证
+#   VOLC_ACCESS_KEY / VOLC_SECRET_KEY     火山引擎 AK/SK（TOS/部署用）
+#   VOLC_REGION          如 cn-beijing
+#   VOLC_TOS_BUCKET      前端静态托管 TOS 桶，如 bpc-web
+#   VOLC_TOS_ENDPOINT    如 tos-cn-beijing.volces.com
+#   VOLC_VKE_KUBECONFIG  （可选）VKE 集群 kubeconfig（base64），用于 kubectl 滚动部署
+
+jobs:
+  # ---- 后端：构建镜像 → 推火山 CR → 滚动部署到 VKE ------------------------
+  backend:
+    name: 后端 → 火山云 CR / VKE
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 登录火山云镜像仓库 CR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.VOLC_CR_REGISTRY }}
+          username: ${{ secrets.VOLC_CR_USERNAME }}
+          password: ${{ secrets.VOLC_CR_PASSWORD }}
+
+      - name: 构建并推送镜像
+        uses: docker/build-push-action@v6
+        with:
+          context: beverage-price-comparison
+          push: true
+          tags: |
+            ${{ secrets.VOLC_CR_REGISTRY }}/${{ secrets.VOLC_CR_NAMESPACE }}/beverage-price-comparison:${{ github.sha }}
+            ${{ secrets.VOLC_CR_REGISTRY }}/${{ secrets.VOLC_CR_NAMESPACE }}/beverage-price-comparison:latest
+
+      - name: 滚动部署到 VKE（若配置了 KUBECONFIG）
+        if: ${{ secrets.VOLC_VKE_KUBECONFIG != '' }}
+        run: |
+          echo "${{ secrets.VOLC_VKE_KUBECONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+          IMAGE="${{ secrets.VOLC_CR_REGISTRY }}/${{ secrets.VOLC_CR_NAMESPACE }}/beverage-price-comparison:${{ github.sha }}"
+          # 假设集群已有 Deployment/bpc-backend，容器名 app
+          kubectl set image deployment/bpc-backend app="$IMAGE" -n default
+          kubectl rollout status deployment/bpc-backend -n default --timeout=180s
+          echo "VKE 滚动部署完成：$IMAGE"
+
+      - name: 未配置 VKE 时的提示
+        if: ${{ secrets.VOLC_VKE_KUBECONFIG == '' }}
+        run: echo "镜像已推送到火山 CR；未配置 VKE_KUBECONFIG，请在 VKE/veFaaS/ECS 侧手动或另配置更新到该镜像。"
+
+  # ---- 前端：静态文件 → TOS -------------------------------------------------
+  frontend:
+    name: 前端 → 火山云 TOS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装火山 TOS CLI（tosutil）
+        run: |
+          curl -sL https://tos-tools.tos-cn-beijing.volces.com/linux/amd64/tosutil -o tosutil
+          chmod +x tosutil
+          ./tosutil config \
+            -i "${{ secrets.VOLC_ACCESS_KEY }}" \
+            -k "${{ secrets.VOLC_SECRET_KEY }}" \
+            -e "${{ secrets.VOLC_TOS_ENDPOINT }}" \
+            -re "${{ secrets.VOLC_REGION }}"
+
+      - name: 同步前端静态文件到 TOS
+        run: |
+          # 当前前端为纯静态 HTML（app/discover/test），直接同步 web/ 目录
+          ./tosutil cp -r -f web/ "tos://${{ secrets.VOLC_TOS_BUCKET }}/" \
+            --include "*.html" --meta "cache-control:no-cache"
+          echo "前端已同步到 TOS 桶 ${{ secrets.VOLC_TOS_BUCKET }}"
+          # 若前端走火山 CDN，需在此追加 CDN 缓存刷新（SubmitRefreshTask），按你的加速域名配置。

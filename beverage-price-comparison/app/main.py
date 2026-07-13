@@ -241,17 +241,22 @@ def search(
     }
 
 
-@app.get("/merchants")
-def merchants_aggregate(
-    q: str = Query("", description="商户名关键词，空=全部商户"),
-    grid: str = Query("", description="商圈网格 ID；传入时只返回网格内商户并按地点排名分排序"),
-):
-    """聚合 API：按商户名聚合，返回每个命中商户下的全部商品名列表。
+def _product_brief(u: ComparableUnit) -> dict:
+    return {"id": u.id, "merchant": u.merchant, "name": u.name,
+            "type": u.type, "platforms": [l.platform for l in u.listings]}
 
-    传入 grid 时：过滤为该网格内可送达商户，并按 PRD §4.3 排名分
-    （平台覆盖度/销量/距离衰减/评分）降序，附带距离与可解释因子。
+
+def _sorted_units(units: list[ComparableUnit]) -> list[ComparableUnit]:
+    return sorted(units, key=lambda x: (-len(x.listings), x.name))
+
+
+def _merchant_groups(q: str, grid: str):
+    """按商户名（模糊）聚合可比单元；网格过滤 + 地点排名分排序。
+
+    返回已排序的 [(商户, 该商户单元列表, rank_or_None)]。
+    有 grid 时按 PRD §4.3 排名分降序，否则按商品数降序。供 /merchants 与
+    /discover 共用，避免逻辑重复。
     """
-    _check_grid(grid)
     nq = _normalize(q)
     groups: dict[str, list[ComparableUnit]] = {}
     for u in store.units:
@@ -266,33 +271,95 @@ def merchants_aggregate(
         default=0,
     ) if grid else 0
 
-    merchants = []
+    result = []
     for m, us in groups.items():
+        rank = None
+        if grid:
+            avg_platforms = sum(len(u.listings) for u in us) / len(us)
+            rank = merchant_rank(m, grid, avg_platforms, max_sales)
+        result.append((m, us, rank))
+
+    if grid:
+        result.sort(key=lambda t: -t[2]["score"])          # 排名分降序
+    else:
+        result.sort(key=lambda t: (-len(t[1]), t[0]))      # 商品数降序
+    return result
+
+
+@app.get("/merchants")
+def merchants_aggregate(
+    q: str = Query("", description="商户名关键词，空=全部商户"),
+    grid: str = Query("", description="商圈网格 ID；传入时只返回网格内商户并按地点排名分排序"),
+):
+    """聚合 API：按商户名聚合，返回每个命中商户下的全部商品名列表。
+
+    传入 grid 时：过滤为该网格内可送达商户，并按 PRD §4.3 排名分降序，
+    附带距离与可解释因子。（无分页；界面分页版见 /discover）
+    """
+    _check_grid(grid)
+    groups = _merchant_groups(q, grid)
+    merchants = []
+    for m, us, rank in groups:
         entry = {
             "merchant": m,
             "product_count": len(us),
             "products": [
-                {
-                    "id": u.id,
-                    "name": u.name,
-                    "type": u.type,
-                    "platforms": [l.platform for l in u.listings],
-                }
-                for u in sorted(us, key=lambda x: (-len(x.listings), x.name))
+                {"id": u.id, "name": u.name, "type": u.type,
+                 "platforms": [l.platform for l in u.listings]}
+                for u in _sorted_units(us)
             ],
         }
-        if grid:
-            avg_platforms = sum(len(u.listings) for u in us) / len(us)
-            entry["rank"] = merchant_rank(m, grid, avg_platforms, max_sales)
+        if rank is not None:
+            entry["rank"] = rank
         merchants.append(entry)
 
-    if grid:
-        # 地点排名：分数高者在前（可解释因子随 rank 透出）
-        merchants.sort(key=lambda e: -e["rank"]["score"])
-    else:
-        merchants.sort(key=lambda e: (-e["product_count"], e["merchant"]))
-
     resp = {"query": q, "count": len(merchants), "merchants": merchants}
+    if grid:
+        resp["grid"] = {"grid_id": grid, "name": geo_data.GRIDS[grid][0]}
+    return resp
+
+
+@app.get("/api/discover")
+def discover(
+    q: str = Query("", description="商户名关键词（模糊匹配），空=全部商户"),
+    grid: str = Query("", description="商圈网格 ID；传入时按 GPS 网格过滤 + 地点排名"),
+    merchant_limit: int = Query(20, ge=1, le=50, description="返回商户数上限"),
+    product_limit: int = Query(100, ge=1, le=200, description="商品每页数量"),
+    product_offset: int = Query(0, ge=0, description="商品分页偏移"),
+):
+    """商户发现 API（GPS + 模糊商户搜索 + 商品分页）——供「商户发现」界面用。
+
+    - 商户：模糊匹配、可选网格过滤与地点排名，最多返回 merchant_limit（默认 20）家；
+    - 商品：命中商户下的全部商品扁平化为一个列表，按 product_limit（默认 100）分页。
+    """
+    _check_grid(grid)
+    groups = _merchant_groups(q, grid)
+    merchant_total = len(groups)
+    shown = groups[:merchant_limit]
+
+    merchants = []
+    flat: list[ComparableUnit] = []
+    for m, us, rank in shown:
+        entry = {"merchant": m, "product_count": len(us)}
+        if rank is not None:
+            entry["rank"] = rank
+        merchants.append(entry)
+        flat.extend(_sorted_units(us))   # 商品顺序随商户排名 → 商户内商品序
+
+    product_total = len(flat)
+    page = flat[product_offset : product_offset + product_limit]
+
+    resp = {
+        "query": q,
+        "merchant_total": merchant_total,     # 命中商户总数
+        "merchant_count": len(merchants),     # 本次返回商户数（≤ merchant_limit）
+        "merchant_limit": merchant_limit,
+        "merchants": merchants,
+        "product_total": product_total,       # 命中商户下商品总数
+        "product_offset": product_offset,
+        "product_count": len(page),           # 本页商品数
+        "products": [_product_brief(u) for u in page],
+    }
     if grid:
         resp["grid"] = {"grid_id": grid, "name": geo_data.GRIDS[grid][0]}
     return resp
@@ -368,13 +435,19 @@ def compare(
     }
 
 
-# ---- 两个界面入口 ---------------------------------------------------------
-# 入口1: /test  测试 + 报表控制台（内部）
-# 入口2: /      正式客户使用界面
+# ---- 界面入口 -------------------------------------------------------------
+# /         正式客户比价界面（app.html）
+# /discover 商户发现界面（GPS + 模糊商户搜索 + 商品分页，discover.html）
+# /test     测试 + 报表控制台（内部，test.html）
 
 @app.get("/")
 def customer_app():
     return FileResponse(os.path.join(_WEB_DIR, "app.html"))
+
+
+@app.get("/discover")
+def discover_page():
+    return FileResponse(os.path.join(_WEB_DIR, "discover.html"))
 
 
 @app.get("/test")

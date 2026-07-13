@@ -5,6 +5,13 @@
 
 > 测试计数随版本变化（部分版本因参数化用例随数据构成收敛而下降，属正常——见 v0.4.2）。
 
+## [v0.6.0] 商户发现界面 + 双云发布流水线
+- **商户发现 API `GET /api/discover`**：模糊商户搜索（商户上限 20、网格过滤 + 地点排名）+ 命中商户下商品扁平化**分页**（100/页），返回 merchant_total/product_total。
+- **商户发现界面 `/discover`（web/discover.html）**：清晰三步流程（定位→模糊搜商户→商品分页），商户 chip 钻取、上/下一页、内联比价；GPS 授权/网格过滤/手机平板适配沿用 v0.5.x。
+- **重构**：抽出 `_merchant_groups`/`_product_brief`/`_sorted_units` 共享辅助，`/merchants` 与 `/api/discover` 复用，消除聚合逻辑重复。
+- **发布流水线**：`.github/workflows/deploy-aliyun.yml`（后端 ACR/SAE + 前端 OSS）与 `deploy-volcengine.yml`（后端 CR/VKE + 前端 TOS），前后端分离、双云适配；文档见 `docs/部署流水线.md`。
+- `tests/test_discover.py` 12 项（模糊/商户上限/商品分页不重不漏/网格排名/可比价）+ E2E 实测（分页/钻取/比价/手机无溢出）。测试 97→109（+E2E discover）。
+
 ## [v0.5.2] 手机/平板 Chrome 适配 + 内嵌态识别 + 健壮性修复
 - 新增平板断点（641–1024px 两列比价）；窄屏位置胶囊换行、面板全宽可滚、触控目标 ≥40px。
 - 识别嵌入(iframe/预览)场景：浏览器禁止内嵌页定位且不弹窗，改为准确指引。
