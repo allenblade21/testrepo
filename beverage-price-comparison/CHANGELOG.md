@@ -5,6 +5,16 @@
 
 > 测试计数随版本变化（部分版本因参数化用例随数据构成收敛而下降，属正常——见 v0.4.2）。
 
+## [v0.8.0] 团购团餐比价新垂直 · G-R1 Mock 骨架
+- **新垂直落地（G-R1）**：餐厅到店团购套餐比价，与饮品即时零售**同 App 双 Tab、下层隔离**（ADR-010）。新增 `app/tuangou/` 子模块，复用主系统适配器/Store 快照/geo/导出范式。
+- **数据模型**（金额分存储）：`Restaurant / MenuItem / UsageRule / GroupDeal / ComparableDeal`；比价边界字段 `restaurant_id`（等价饮品 merchant）。
+- **取数适配器**：`MockMeituanTuangouAdapter` 字段对齐美团联盟/CPS 可得范围；菜品明细列为**可能缺失字段**，缺失即 `has_menu_detail=false` + 界面标注降级（ADR-011）。
+- **同门店约束三层保障**（复用 ADR-001）：匹配键首段=门店 + 构建断言门店唯一 + `/api/tuangou/compare` 跨门店 409。
+- **团购到手价引擎**：`团购价 − 补贴(封顶不为负) + 包间费/服务费`，**人均到手价 = 到手价 ÷ 人数**（未选取区间中值）；复用饮品封顶不变式 `min()`。
+- **API `/api/tuangou/*`**（延续 ADR-009/013 分路径）：`restaurants`（网格/菜系/人数召回）、`search`（关键词+人数+分页）、`compare`（到手价+人均+明细+使用规则+deeplink）。
+- `tests/tuangou/` 35 项（模型/到手价/同门店三层/降级/API/种子哨兵）。测试 117→**152 全绿**。页面 `/tuangou` 与跨平台匹配（G-R2/R3）为后续里程碑。
+- 设计见 `docs/团购比价设计文档.md`，决策 ADR-010~013，数据源接入 `docs/CPS接入条件与步骤.md`。
+
 ## [v0.7.0] 比价结果导出 PDF（带时间戳）
 - **`POST /export`**：接收会话累积的比价记录，服务端用 reportlab（内置中文字体 STSong-Light）渲染真实 PDF，附件下载；**文件名与页眉均带时间戳**（东八区），最便宜行高亮、逐项明细表。
 - **前端**：`app.html` 与 `discover.html` 新增「导出比价结果 PDF」按钮 + 会话比价记录累积（同商品同参数去重）+ 已比价计数 + 清空；无记录时按钮隐藏。

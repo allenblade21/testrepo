@@ -36,6 +36,7 @@ from .matching import _normalize, search_units
 from .models import ComparableUnit, Promotion
 from .pricing import compute_price
 from .store import DataStore
+from .tuangou.routes import router as tuangou_router
 
 # 展示用东八区时间（导出时间戳）
 _CST = timezone(timedelta(hours=8))
@@ -85,6 +86,9 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+# 团购团餐比价（新垂直 G-R1）：/api/tuangou/* 数据接口，与饮品下层隔离（ADR-010/013）
+app.include_router(tuangou_router)
 
 # ---- 可观测 + 限流中间件 ----------------------------------------------------
 _metrics = {

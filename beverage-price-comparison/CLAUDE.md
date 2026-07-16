@@ -17,6 +17,7 @@
 | `geo.py` | 网格解析 + 排名分（0.35覆盖+0.25销量+0.20距离+0.20评分）| 排名分必须与公示因子加权一致（有测试锁）|
 | `export_pdf.py` | 比价结果 → PDF（reportlab + 内置中文字体 STSong-Light，带时间戳）| `/compare` 与 `/export` 共用 `_compute_comparison` 辅助（main.py）|
 | `adapters/` | 平台适配层（可插拔），当前 Mock 读 SQLite | 接真实数据只换这层，上层零改动 |
+| `tuangou/` | **团购团餐比价新垂直（G-R1）**：models/seed_deals/adapters/matching/pricing/store/routes | 独立子模块，同 App 双 Tab 下层隔离；边界字段 `restaurant_id`；`/api/tuangou/*`；金额分存储；设计见 `docs/团购比价设计文档.md`，决策 ADR-010~013 |
 
 ### 数据源（Mock，固定种子可复现）
 - `seed_data.py`：4 家核心商户手工数据，**承载 S1–S10 场景基线，永不重生成**（含起送价 `STORE_MIN_ORDER`、首单券 `FIRST_ORDER_COUPON`）。
