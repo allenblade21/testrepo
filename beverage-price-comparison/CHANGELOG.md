@@ -5,6 +5,14 @@
 
 > 测试计数随版本变化（部分版本因参数化用例随数据构成收敛而下降，属正常——见 v0.4.2）。
 
+## [v0.8.2] 抖音 + 阿里妈妈真实 CPS 接入 · 三平台跨源对齐
+- **抖音生活服务**：`douyin_client.py`（client_token OAuth 流程 + `goodlife/v1/goods/product/online/get`，金额单位**分**）+ `douyin_adapter.py`（在线商品→GroupDeal，下线丢弃、降级标注）。
+- **阿里妈妈/淘宝联盟**：`alimama_client.py`（TOP 协议 `router/rest` + **MD5 签名**(secret+排序参数+secret 大写) + `taobao.tbk.dg.material.optional`）+ `alimama_adapter.py`（元字符串→分、`//` 链接补协议、平台记「口碑」）。
+- **多源装配**：`TUANGOU_SOURCE` 支持逗号多源（`union,douyin,alimama`）；**单源失败只跳过该源**，全部失败回退 Mock 保活；`/api/tuangou/health` 显示 `union+douyin+alimama（xx失败跳过）`。
+- **跨平台对齐（G-R2 地基）**：品牌伪门店 ID 平台无关（`cps_common.py`），三平台「海底捞欢聚4人餐」自动对齐进同一可比单元（置信度=疑似），/compare 三平台并排+最优+人均节省。
+- 测试 161→**170 全绿 + 1 skip**：抖音 token/错秘钥拒绝/映射（分不再×100）、TOP 签名向量/坏签名 25 拒绝/映射、三源对齐、跨平台比价(9700/9950/10200)、单源失败弹性。
+- `tools/cps_smoke.py`：三平台统一真实密钥冒烟（`meituan|douyin|alimama|all`）。
+
 ## [v0.8.1] 美团联盟真实 CPS API 接入（只差填密钥）
 - **真实联盟客户端** `app/tuangou/union_client.py`：官方网关协议完整实现——`media.meituan.com/cps_open/common/api/v1/*`、HMAC-SHA256 签名（Content-MD5 + stringToSign + S-Ca-* 请求头）、`query_coupon`（到店到餐，经纬度×1e6）、`get_referral_link`（跟单计佣 deeplink）。
 - **真实适配器** `union_adapter.py`：联盟商品券→GroupDeal 诚实映射——元→分、官方 `originalPrlice` 拼写兼容、标题解析人数档（解析不到=(1,99) 未知档）、不可售丢弃、**无菜品明细→降级标注**（ADR-011 兑现）、门店按品牌×商圈聚合（真实门店主数据映射待商家授权，P2-2）。

@@ -128,7 +128,7 @@ def test_adapter_mapping(gateway_url):
 
     rests = adapter.fetch_restaurants()
     assert {r.brand for r in rests} == {"海底捞", "西贝莜面村", "丰茂烤串"}
-    assert all(r.id.startswith("r_union_") for r in rests)
+    assert all(r.id.startswith("r_brand_") for r in rests)   # 平台无关伪门店（跨平台可对齐）
     c.close()
 
 

@@ -13,39 +13,15 @@
 from __future__ import annotations
 
 import logging
-import re
 
 import geo_data
 
 from .adapters import TuangouAdapter
+from .cps_common import brand_store_id, build_brand_restaurant, parse_party, yuan_to_cents
 from .models import MEITUAN_DIANPING, DEAL_SET, GroupDeal, Restaurant, UsageRule
 from .union_client import LINKTYPE_H5, MeituanUnionClient, UnionAPIError
 
 _log = logging.getLogger("bpc.union")
-
-_PARTY_RE = re.compile(r"(\d+)\s*[-~至]?\s*(\d+)?\s*人")
-
-
-def _yuan_to_cents(v) -> int:
-    try:
-        return int(round(float(v) * 100))
-    except (TypeError, ValueError):
-        return 0
-
-
-def parse_party(title: str) -> tuple[int, int]:
-    """从套餐标题解析人数档：「4 人餐」→(4,4)，「3-4人」→(3,4)，无→(1,99) 未知档。"""
-    m = _PARTY_RE.search(title or "")
-    if not m:
-        return (1, 99)
-    lo = int(m.group(1))
-    hi = int(m.group(2)) if m.group(2) else lo
-    return (min(lo, hi), max(lo, hi))
-
-
-def _brand_store_id(brand: str) -> str:
-    slug = re.sub(r"[^0-9a-zA-Z一-鿿]+", "", brand)[:24] or "unknown"
-    return f"r_union_{slug}"
 
 
 class MeituanUnionAdapter(TuangouAdapter):
@@ -100,21 +76,16 @@ class MeituanUnionAdapter(TuangouAdapter):
             return None
 
         brand = (item.get("brandInfo") or {}).get("brandName") or "未知品牌"
-        rid = _brand_store_id(brand)
+        rid = brand_store_id(brand)
         if rid not in self._restaurants:
-            gname, glat, glng = geo_data.GRIDS[self.grid_id]
             poi_num = (item.get("availablePoiInfo") or {}).get("availablePoiNum", 0)
-            self._restaurants[rid] = Restaurant(
-                id=rid, brand=brand,
-                branch=f"品牌级·{gname}附近可用{poi_num}店" if poi_num else f"品牌级·{gname}",
-                cuisine="到店餐饮", grid_id=self.grid_id, lat=glat, lng=glng,
-            )
+            self._restaurants[rid] = build_brand_restaurant(brand, self.grid_id, poi_num)
 
         sell = detail.get("sellPrice")
         # 官方接口划线价字段拼写即为 originalPrlice；两种写法都兼容
         original = detail.get("originalPrlice", detail.get("originalPrice", sell))
-        group_cents = _yuan_to_cents(sell)
-        list_cents = _yuan_to_cents(original) or group_cents
+        group_cents = yuan_to_cents(sell)
+        list_cents = yuan_to_cents(original) or group_cents
         if group_cents <= 0:
             return None
 

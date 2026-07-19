@@ -130,13 +130,17 @@
 
 ---
 
-## 6.5 代码侧已就绪（v0.8.1）✅
+## 6.5 代码侧已就绪（v0.8.2）✅ —— 三平台只差填密钥
 
-美团联盟接入的**工程侧已全部完成，只差密钥**：
-- 客户端 `app/tuangou/union_client.py`（官方签名协议 HMAC-SHA256 + query_coupon + get_referral_link）；
-- 适配器 `union_adapter.py`（元→分 / 降级 / 人数解析 / deeplink 归因）；
-- 切源：环境变量 `TUANGOU_SOURCE=union` + `MEITUAN_UNION_APPKEY/SECRET`，失败自动回退 Mock；
-- 验真：拿到密钥后 `python tools/union_smoke.py` 一条命令冒烟，通过即切。
+| 平台 | 客户端（真实协议） | 适配器 | 密钥环境变量 |
+| --- | --- | --- | --- |
+| 美团联盟 | `union_client.py`（HMAC-SHA256 签名 + query_coupon + get_referral_link）| `union_adapter.py` | `MEITUAN_UNION_APPKEY/SECRET[/SID]` |
+| 抖音生活服务 | `douyin_client.py`（client_token OAuth + 商品线上查询，金额单位分）| `douyin_adapter.py` | `DOUYIN_CLIENT_KEY/SECRET[/ACCOUNT_ID]` |
+| 阿里妈妈/淘宝联盟 | `alimama_client.py`（TOP MD5 签名 + 物料搜索）| `alimama_adapter.py` | `ALIMAMA_APPKEY/SECRET/ADZONE_ID` |
+
+- **切源**：`TUANGOU_SOURCE=union,douyin,alimama`（逗号多源；单源失败只跳过，全失败回退 Mock 保活）；
+- **验真**：拿到密钥后 `python tools/cps_smoke.py all` 一条命令冒烟，通过即切；
+- **跨平台对齐**：品牌伪门店平台无关，三平台同品牌同人数自动进同一可比单元（置信度=疑似）。
 
 ## 7. 待官方确认清单（接入前逐条落实）
 
