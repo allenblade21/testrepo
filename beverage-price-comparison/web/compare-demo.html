@@ -1,0 +1,1465 @@
+<title>比价 Demo · 饮品 × 团购双垂直</title>
+<style>
+  :root{
+    --bg:#F7F3EE; --panel:#FFFFFF; --ink:#1C1815; --ink-soft:#6B6157;
+    --line:#E4DACE; --accent:#D8552B;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --bg:#151210; --panel:#221D19; --ink:#F1EAE1; --ink-soft:#A99E90;
+      --line:#332B24; --accent:#F0703F; }
+  }
+  :root[data-theme="light"]{ --bg:#F7F3EE; --panel:#FFFFFF; --ink:#1C1815; --ink-soft:#6B6157;
+    --line:#E4DACE; --accent:#D8552B; }
+  :root[data-theme="dark"]{ --bg:#151210; --panel:#221D19; --ink:#F1EAE1; --ink-soft:#A99E90;
+    --line:#332B24; --accent:#F0703F; }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;
+    font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  .tabs{display:flex;gap:6px;padding:10px 14px 0;border-bottom:1px solid var(--line);
+    background:var(--bg);flex:0 0 auto}
+  .tab{appearance:none;border:1px solid var(--line);border-bottom:none;background:var(--panel);
+    color:var(--ink-soft);font:inherit;font-size:14px;font-weight:600;padding:10px 20px;
+    border-radius:12px 12px 0 0;cursor:pointer;display:flex;align-items:center;gap:8px}
+  .tab[aria-selected="true"]{color:var(--ink);border-color:var(--accent);
+    border-bottom:2px solid var(--panel);margin-bottom:-1px;
+    box-shadow:inset 0 3px 0 var(--accent)}
+  .tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .note{margin-left:auto;align-self:center;font-size:11px;color:var(--ink-soft);padding-right:4px}
+  .stage{flex:1 1 auto;min-height:0;position:relative}
+  iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--panel)}
+  iframe[hidden]{display:none}
+</style>
+<div class="tabs" role="tablist">
+  <button class="tab" id="t-bev" role="tab" aria-selected="true" aria-controls="f-bev" type="button">🥤 饮品即时零售</button>
+  <button class="tab" id="t-tg" role="tab" aria-selected="false" aria-controls="f-tg" type="button">🍲 团餐团购</button>
+  <span class="note">Mock 演示 · 非真实价格</span>
+</div>
+<div class="stage">
+  <iframe id="f-bev" title="饮品比价 Demo" srcdoc="<title>饮品比价 · 可点击 Demo</title>
+<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1, viewport-fit=cover&quot;>
+<style>
+  :root{
+    --bg:#f4f7f8; --surface:#ffffff; --line:#dfe7e9; --ink:#152529; --muted:#5c7076;
+    --accent:#0d7f8c; --accent-soft:#e3f2f4; --accent-ink:#ffffff;
+    --price:#d4520a; --best:#0e8a45; --best-soft:#e6f5ec; --warn:#c23a2b;
+    --tag-bg:#eef2f4; --tag-ink:#41565d; --merch-bg:#faf0d8; --merch-ink:#7d5a10;
+    --fo:#7c3f9d; --fo-bg:#f3e9f8;
+    --shadow:0 2px 12px rgba(21,37,41,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f191c; --surface:#16242a; --line:#26383f; --ink:#e4edef; --muted:#8da2a8;
+      --accent:#43bfcd; --accent-soft:#12333a; --accent-ink:#08272c;
+      --price:#ff8b52; --best:#4cc97e; --best-soft:#123522; --warn:#ef7f70;
+      --tag-bg:#1e3038; --tag-ink:#a7bcc2; --merch-bg:#38300f; --merch-ink:#e3c56e;
+      --fo:#c99aE8; --fo-bg:#2c1e38;
+      --shadow:0 2px 12px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme=&quot;dark&quot;]{
+    --bg:#0f191c; --surface:#16242a; --line:#26383f; --ink:#e4edef; --muted:#8da2a8;
+    --accent:#43bfcd; --accent-soft:#12333a; --accent-ink:#08272c;
+    --price:#ff8b52; --best:#4cc97e; --best-soft:#123522; --warn:#ef7f70;
+    --tag-bg:#1e3038; --tag-ink:#a7bcc2; --merch-bg:#38300f; --merch-ink:#e3c56e;
+    --fo:#c99ae8; --fo-bg:#2c1e38;
+    --shadow:0 2px 12px rgba(0,0,0,.35);
+  }
+  :root[data-theme=&quot;light&quot;]{
+    --bg:#f4f7f8; --surface:#ffffff; --line:#dfe7e9; --ink:#152529; --muted:#5c7076;
+    --accent:#0d7f8c; --accent-soft:#e3f2f4; --accent-ink:#ffffff;
+    --price:#d4520a; --best:#0e8a45; --best-soft:#e6f5ec; --warn:#c23a2b;
+    --tag-bg:#eef2f4; --tag-ink:#41565d; --merch-bg:#faf0d8; --merch-ink:#7d5a10;
+    --fo:#7c3f9d; --fo-bg:#f3e9f8;
+    --shadow:0 2px 12px rgba(21,37,41,.06);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,&quot;PingFang SC&quot;,&quot;Hiragino Sans GB&quot;,&quot;Microsoft YaHei&quot;,sans-serif;
+    font-size:14px;line-height:1.55;-webkit-tap-highlight-color:transparent;}
+  button{touch-action:manipulation;font:inherit;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px 48px;
+    padding-left:max(20px, env(safe-area-inset-left));padding-right:max(20px, env(safe-area-inset-right));}
+
+  header{border-bottom:1px solid var(--line);background:var(--surface);}
+  .head-in{max-width:880px;margin:0 auto;padding:18px 20px 0;}
+  .brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .brand h1{margin:0;font-size:20px;font-weight:700;}
+  .brand .pill{font-size:11px;padding:2px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:600;}
+  .brand .sub{width:100%;margin-top:3px;color:var(--muted);font-size:12.5px;}
+  .tabs{display:flex;gap:0;margin-top:14px;}
+  .tab{padding:9px 18px;border:none;background:none;color:var(--muted);font-weight:600;font-size:13.5px;
+    border-bottom:2.5px solid transparent;cursor:pointer;}
+  .tab.on{color:var(--accent);border-bottom-color:var(--accent);}
+  .tab:focus{outline:2px solid var(--accent);outline-offset:-2px;}
+  .tab:focus:not(:focus-visible){outline:none;}
+
+  .searchrow{display:flex;gap:8px;margin:16px 0 0;}
+  .searchrow input[type=text]{flex:1;min-width:0;padding:10px 14px;font-size:15px;
+    border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);}
+  .searchrow input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+  .searchrow button{padding:10px 22px;min-height:44px;border:none;border-radius:10px;font-size:14px;font-weight:600;
+    background:var(--accent);color:var(--accent-ink);cursor:pointer;}
+  .searchrow button:focus{outline:2px solid var(--ink);outline-offset:2px;}
+  .searchrow button:focus:not(:focus-visible){outline:none;}
+
+  .controls{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:12px 0 4px;color:var(--muted);font-size:13px;}
+  .controls label{display:flex;gap:6px;align-items:center;cursor:pointer;min-height:32px;}
+  .controls input[type=number]{width:58px;padding:5px 7px;border:1px solid var(--line);border-radius:7px;
+    background:var(--surface);color:var(--ink);font-size:13px;}
+  .controls input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .controls input:focus:not(:focus-visible){outline:none;}
+  .fo-box{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:6px 0 8px;padding:9px 12px;
+    background:var(--fo-bg);border-radius:10px;font-size:13px;color:var(--fo);}
+  .fo-box b{font-weight:650;}
+  .fo-box label{display:flex;gap:5px;align-items:center;cursor:pointer;min-height:28px;}
+  .fo-hint{font-size:11.5px;opacity:.8;width:100%;}
+
+  /* 商户直达（聚合查询）板块 */
+  .agg{border:1.5px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 14px;margin:12px 0 4px;}
+  .agg-head{font-size:13px;font-weight:650;color:var(--ink);}
+  .agg-head .hint{font-weight:400;font-size:11.5px;color:var(--muted);margin-left:8px;}
+  .agg input{width:100%;margin-top:8px;padding:9px 12px;font-size:14px;border:1.5px solid var(--line);
+    border-radius:9px;background:var(--bg);color:var(--ink);box-sizing:border-box;}
+  .agg input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+  .mgroup{margin-top:12px;}
+  .mgroup .mname{font-size:13px;font-weight:650;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .mgroup .mcount{font-size:11px;color:var(--muted);font-weight:400;}
+  .plist{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
+  .pchip{font-size:12px;padding:6px 11px;border-radius:99px;border:1px solid var(--line);
+    background:var(--bg);color:var(--ink);cursor:pointer;min-height:32px;}
+  .pchip:hover{border-color:var(--accent);color:var(--accent);}
+  .pchip:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .pchip:focus:not(:focus-visible){outline:none;}
+  .pchip .pn{color:var(--muted);margin-left:4px;font-size:11px;}
+  .agg .empty-m{font-size:12px;color:var(--muted);margin-top:10px;}
+
+  /* 位置胶囊 + 选择面板 */
+  .locpill{display:inline-flex;align-items:center;gap:5px;margin-left:10px;vertical-align:middle;
+    font-size:12px;font-weight:600;padding:4px 12px;border-radius:99px;cursor:pointer;
+    border:1.5px solid var(--accent);color:var(--accent);background:var(--accent-soft);}
+  .locpill:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .locpill:focus:not(:focus-visible){outline:none;}
+  .locpanel{display:none;margin-top:10px;border:1.5px solid var(--line);border-radius:12px;
+    background:var(--surface);padding:12px 14px;}
+  .locpanel.open{display:block;}
+  .gpsbtn{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;margin-bottom:10px;
+    border:1.5px solid var(--accent);border-radius:10px;background:var(--accent-soft);
+    color:var(--accent);font-weight:600;font-size:13.5px;cursor:pointer;min-height:44px;}
+  .gpsbtn:disabled{opacity:.6;cursor:wait;}
+  .loclabel{font-size:11.5px;color:var(--muted);margin-bottom:6px;}
+  .gridchips{display:flex;gap:7px;flex-wrap:wrap;}
+  .gridchip{font-size:12.5px;padding:7px 14px;border-radius:99px;border:1px solid var(--line);
+    background:var(--bg);color:var(--ink);cursor:pointer;min-height:36px;}
+  .gridchip.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:650;}
+  .locmsg{font-size:11.5px;color:var(--warn);margin-top:8px;}
+  .mdist{font-size:11px;color:var(--accent);font-weight:600;}
+  .exportbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 2px;padding:10px 14px;
+    background:var(--accent-soft);border:1px solid var(--accent);border-radius:11px;}
+  .exportbar[hidden]{display:none;}
+  .exportbar .ec{font-size:13px;font-weight:600;color:var(--accent);}
+  .exportbtn{padding:8px 18px;min-height:40px;border:none;border-radius:9px;background:var(--accent);
+    color:var(--accent-ink);font-weight:650;font-size:13.5px;cursor:pointer;}
+  .exportbtn:focus{outline:2px solid var(--ink);outline-offset:2px;} .exportbtn:focus:not(:focus-visible){outline:none;}
+  .clearbtn{padding:8px 12px;min-height:40px;border:1px solid var(--line);border-radius:9px;background:var(--surface);
+    color:var(--muted);font-size:12.5px;cursor:pointer;}
+  /* 打印视图：屏幕隐藏；打印时只显示它 */
+  #printarea{display:none;}
+  @media print{
+    body{background:#fff;}
+    body > header, body > .wrap{display:none !important;}
+    #printarea{display:block !important;padding:0;color:#000;}
+    #printarea h1{font-size:20px;margin:0 0 4px;}
+    #printarea .pmeta{font-size:11px;color:#555;margin-bottom:2px;}
+    #printarea .pitem{margin:14px 0;page-break-inside:avoid;}
+    #printarea h2{font-size:14px;margin:0 0 2px;border-bottom:1px solid #000;padding-bottom:2px;}
+    #printarea .psub{font-size:10px;color:#555;margin-bottom:4px;}
+    #printarea table{border-collapse:collapse;width:100%;font-size:10px;}
+    #printarea th,#printarea td{border:1px solid #999;padding:3px 6px;text-align:left;}
+    #printarea th{background:#eee;}
+    #printarea tr.best td{background:#e6f5ec;font-weight:700;}
+    #printarea .save{font-size:11px;font-weight:700;margin-top:3px;}
+  }
+  .meta-line{font-size:12px;color:var(--muted);margin:8px 2px 0;}
+  .morebtn{padding:9px 26px;border:1.5px solid var(--line);border-radius:99px;background:var(--surface);
+    color:var(--accent);font-weight:600;cursor:pointer;min-height:40px;}
+  .morebtn:hover{border-color:var(--accent);}
+  .results{display:grid;gap:9px;margin-top:8px;}
+  .unit{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:13px 16px;cursor:pointer;
+    box-shadow:var(--shadow);transition:border-color .12s;text-align:left;width:100%;color:inherit;}
+  .unit:hover,.unit.active{border-color:var(--accent);}
+  .unit:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .unit:focus:not(:focus-visible){outline:none;}
+  .unit .name{font-weight:650;font-size:14.5px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .tag{font-size:11px;padding:1px 8px;border-radius:99px;background:var(--tag-bg);color:var(--tag-ink);font-weight:500;}
+  .tag.merch{background:var(--merch-bg);color:var(--merch-ink);}
+  .unit .meta{font-size:12px;color:var(--muted);margin-top:3px;}
+
+  .cmp{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:18px;margin-top:14px;box-shadow:var(--shadow);}
+  .cmp h2{margin:0;font-size:16.5px;}
+  .cmp .sub{color:var(--muted);font-size:12px;margin:3px 0 14px;}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:11px;}
+  .col{border:1px solid var(--line);border-radius:11px;padding:13px 14px;position:relative;}
+  .col.best{border-color:var(--best);background:var(--best-soft);}
+  .col.off{opacity:.6;}
+  .col .plat{font-weight:650;font-size:13.5px;}
+  .col .price{font-size:26px;font-weight:750;color:var(--price);margin:7px 0 2px;font-variant-numeric:tabular-nums;}
+  .col .price small{font-size:12px;font-weight:500;color:var(--muted);margin-left:3px;}
+  .col .no{color:var(--warn);font-size:11.5px;margin-bottom:4px;}
+  .badge{position:absolute;top:-9px;right:10px;background:var(--best);color:#fff;font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:99px;}
+  .bd{border-top:1px dashed var(--line);margin-top:9px;padding-top:8px;font-size:12px;}
+  .bd .row{display:flex;justify-content:space-between;gap:10px;padding:1.5px 0;color:var(--muted);}
+  .bd .row .amt{font-variant-numeric:tabular-nums;color:var(--ink);}
+  .bd .row.minus .amt{color:var(--best);}
+  .bd .row.forow span:first-child{color:var(--fo);}
+  .save{margin-top:13px;font-weight:650;font-size:13.5px;color:var(--best);}
+  .empty{color:var(--muted);text-align:center;padding:34px 0;}
+  footer{margin-top:34px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;}
+
+  /* 测试·报表视图 */
+  .label{font-size:11.5px;font-weight:600;letter-spacing:.08em;color:var(--muted);margin:22px 0 8px;}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 13px;}
+  .stat .v{font-size:21px;font-weight:750;font-variant-numeric:tabular-nums;}
+  .stat .k{font-size:11px;color:var(--muted);}
+  .stat.ok .v{color:var(--best);}
+  .tblwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:11px;}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:620px;}
+  th,td{padding:7px 11px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;}
+  th{font-size:11px;color:var(--muted);font-weight:600;}
+  tr:last-child td{border-bottom:none;}
+  td.num{font-variant-numeric:tabular-nums;}
+  .pass{color:var(--best);font-weight:650;} .fail{color:var(--warn);font-weight:650;}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+  .chip{font-size:12.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink);cursor:pointer;transition:border-color .12s;}
+  .chip:hover{border-color:var(--accent);color:var(--accent);}
+  .chip:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .chip:focus:not(:focus-visible){outline:none;}
+  .chip b{color:var(--accent);font-weight:700;margin-right:4px;}
+  .hidden{display:none;}
+
+  /* 平板（iPad/Android pad）Chrome */
+  @media (min-width:641px) and (max-width:1024px){
+    .cols{grid-template-columns:repeat(2,1fr);}
+    .locpanel{padding:14px 16px;}
+    .gridchip{min-height:40px;}
+  }
+  @media (max-width:640px){
+    .head-in{padding:14px 14px 0;padding-left:max(14px, env(safe-area-inset-left));padding-right:max(14px, env(safe-area-inset-right));}
+    .wrap{padding:0 14px 40px;padding-left:max(14px, env(safe-area-inset-left));padding-right:max(14px, env(safe-area-inset-right));}
+    .brand h1{font-size:18px;}
+    .searchrow input[type=text],.controls input[type=number],.agg input{font-size:16px;}
+    .chips{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:none;}
+    .chips::-webkit-scrollbar{display:none;}
+    .chip{flex:0 0 auto;min-height:40px;}
+    .controls label{min-height:44px;}
+    .cmp{padding:14px;}
+    .col .price{font-size:23px;}
+    /* 位置胶囊窄屏换行、面板全宽可滚、chip 触控友好 */
+    .locpill{margin-left:0;margin-top:8px;min-height:36px;}
+    .locpanel{padding:12px;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+    .gpsbtn{font-size:15px;}
+    .gridchip{min-height:40px;padding:9px 14px;}
+  }
+  @media (max-width:480px){ .cols{grid-template-columns:1fr;} }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <div class=&quot;head-in&quot;>
+    <div class=&quot;brand&quot;>
+      <h1>🥤 饮品比价</h1>
+      <span class=&quot;pill&quot;>同商户比价 Demo</span><button class=&quot;locpill&quot; id=&quot;locpill&quot; onclick=&quot;toggleLocPanel()&quot;>📍 选择位置 ▾</button>
+      <div class=&quot;sub&quot;>阿里闪购 · 京东 · 美团 —— 同一家商户的同一款饮品，走哪个平台下单更便宜</div>
+    </div>
+    <div class=&quot;tabs&quot;>
+      <button class=&quot;tab on&quot; id=&quot;tabC&quot; onclick=&quot;switchView('customer')&quot;>正式客户界面</button>
+      <button class=&quot;tab&quot; id=&quot;tabT&quot; onclick=&quot;switchView('test')&quot;>测试 · 报表</button>
+    </div>
+  </div>
+</header>
+
+<div class=&quot;wrap&quot;>
+  <!-- ═══ 入口2 · 客户界面 ═══ -->
+  <div id=&quot;viewCustomer&quot;>
+    <div class=&quot;locpanel&quot; id=&quot;locpanel&quot;>
+      <button class=&quot;gpsbtn&quot; id=&quot;gpsbtn&quot; onclick=&quot;useMyLocation()&quot;>⊕ 使用当前位置（GPS）</button>
+      <div class=&quot;loclabel&quot;>或选择商圈（演示网格位于北京；也可不限位置浏览全部）：</div>
+      <div class=&quot;gridchips&quot; id=&quot;gridchips&quot;></div>
+      <div class=&quot;locmsg&quot; id=&quot;locmsg&quot;></div>
+    </div>
+    <div class=&quot;searchrow&quot;>
+      <input id=&quot;q&quot; type=&quot;text&quot; placeholder=&quot;搜商品或商户：可乐 / 永辉 / 罗森 / 喜茶 / 瑞幸…&quot; />
+      <button onclick=&quot;doSearch()&quot;>搜索</button>
+    </div>
+    <div class=&quot;controls&quot;>
+      <label>数量 <input id=&quot;qty&quot; type=&quot;number&quot; inputmode=&quot;numeric&quot; min=&quot;1&quot; max=&quot;99&quot; value=&quot;1&quot; onchange=&quot;recompare()&quot;></label>
+      <label><input id=&quot;delivery&quot; type=&quot;checkbox&quot; checked onchange=&quot;recompare()&quot;> 含配送费</label>
+    </div>
+    <div class=&quot;fo-box&quot; id=&quot;foBox&quot;>
+      <b>🎫 每日首单券</b>
+      <span class=&quot;fo-hint&quot;>勾选你今天还没下过单的平台——这些平台可用当日首单券，会计入到手价</span>
+    </div>
+    <div class=&quot;agg&quot;>
+      <div class=&quot;agg-head&quot;>🏪 商户直达<span class=&quot;hint&quot;>输入商户名，实时聚合该商户的全部商品</span></div>
+      <input id=&quot;mq&quot; type=&quot;text&quot; placeholder=&quot;如：永辉 / 罗森 / 便利 / 蜜雪冰城 / 星巴克…&quot;>
+      <div id=&quot;mgroups&quot;></div>
+    </div>
+
+    <div id=&quot;exportbar&quot; class=&quot;exportbar&quot; hidden>
+      <span id=&quot;exportcount&quot; class=&quot;ec&quot;></span>
+      <button id=&quot;exportbtn&quot; class=&quot;exportbtn&quot; onclick=&quot;exportPdf()&quot;>⬇ 导出比价结果 PDF</button>
+      <button class=&quot;clearbtn&quot; onclick=&quot;clearHistory()&quot;>清空</button>
+    </div>
+    <div id=&quot;meta&quot; class=&quot;meta-line&quot;></div>
+    <div id=&quot;results&quot; class=&quot;results&quot;></div>
+    <div id=&quot;more&quot; style=&quot;text-align:center;margin-top:10px;&quot;></div>
+    <div id=&quot;detail&quot;></div>
+    <footer>到手价 = 售价×数量 − 店铺优惠 − 补贴 − 券（含每日首单券）+ 配送费；每项减免封顶于应付、到手价恒非负。<br>
+    比价仅在同一商户的跨平台条目间进行。产品库：16 家商户 / 345 条上架（Mock 演示数据，非真实价格）。</footer>
+  </div>
+
+  <!-- ═══ 入口1 · 测试+报表 ═══ -->
+  <div id=&quot;viewTest&quot; class=&quot;hidden&quot;>
+    <div class=&quot;label&quot;>系统状态</div>
+    <div class=&quot;stats&quot; id=&quot;stats&quot;></div>
+    <div class=&quot;label&quot;>自动化场景报表（本地引擎即时执行 S1–S9）</div>
+    <div class=&quot;tblwrap&quot;>
+      <table>
+        <thead><tr><th>场景</th><th>说明</th><th>参数</th><th>期望最优</th><th>实际最优</th><th>期望价</th><th>实际价</th><th>结果</th></tr></thead>
+        <tbody id=&quot;report&quot;></tbody>
+      </table>
+    </div>
+    <div class=&quot;label&quot;>场景一键载入（切回客户界面查看渲染效果）</div>
+    <div class=&quot;chips&quot; id=&quot;chips&quot;></div>
+    <footer>S1–S7 不启用首单券（基线）；S8/S9 验证每日首单券；S5/S10 验证商户级起送价（BUG-002 修复：起送价按门店而非平台，瑞幸美团不足20元可下单）。仓库版另有 /test 控制台对真实 API 执行同款报表。</footer>
+  </div>
+</div>
+
+<div id=&quot;printarea&quot;></div>
+
+<script>
+/* ===== 配置与种子数据（与仓库 seed_data.py v0.3 一致，金额:分）===== */
+const PLATFORMS = [&quot;阿里闪购&quot;,&quot;京东&quot;,&quot;美团&quot;];
+const DELIVERY = { &quot;阿里闪购&quot;:{base:300,freeOver:3900}, &quot;京东&quot;:{base:500,freeOver:9900}, &quot;美团&quot;:{base:500,freeOver:3900} };
+// 起送价为「商户×平台」级门店属性（商家自设，BUG-002 修复：非平台统一）；未配置=0
+const STORE_MIN_ORDER = { &quot;喜茶(国贸店)|美团&quot;:2600, &quot;喜茶(国贸店)|阿里闪购&quot;:1500 };
+const FIRST_ORDER = { &quot;阿里闪购&quot;:{desc:&quot;每日首单减4&quot;,value:400,threshold:1000},
+                      &quot;京东&quot;:{desc:&quot;每日首单减3&quot;,value:300,threshold:0},
+                      &quot;美团&quot;:{desc:&quot;每日首单减5&quot;,value:500,threshold:1500} };
+const P = (kind,desc,value,threshold)=>({kind,desc,value,threshold});
+const LISTINGS = [
+ {pf:&quot;阿里闪购&quot;,m:&quot;永辉超市(朝阳店)&quot;,b:&quot;可口可乐&quot;,n:&quot;经典可乐&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901010101010&quot;,lp:1590,sp:1390,pr:[P(&quot;满减&quot;,&quot;满15减2&quot;,200,1500)]},
+ {pf:&quot;京东&quot;,m:&quot;永辉超市(朝阳店)&quot;,b:&quot;可口可乐&quot;,n:&quot;Coca-Cola 汽水&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901010101010&quot;,lp:1580,sp:1290,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;永辉超市(朝阳店)&quot;,b:&quot;可口可乐&quot;,n:&quot;可口可乐&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901010101010&quot;,lp:1600,sp:1450,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;罗森便利店(建国路店)&quot;,b:&quot;可口可乐&quot;,n:&quot;可口可乐&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901010101010&quot;,lp:1650,sp:1550,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;罗森便利店(建国路店)&quot;,b:&quot;可口可乐&quot;,n:&quot;经典可乐&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901010101010&quot;,lp:1650,sp:1480,pr:[P(&quot;券&quot;,&quot;满14减2&quot;,200,1400)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;永辉超市(朝阳店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;饮用天然水&quot;,s:&quot;550ml×12瓶&quot;,t:&quot;bottled&quot;,bc:&quot;6902020202020&quot;,lp:2500,sp:2280,pr:[P(&quot;券&quot;,&quot;满20减3&quot;,300,2000)]},
+ {pf:&quot;京东&quot;,m:&quot;永辉超市(朝阳店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;天然水&quot;,s:&quot;550ml×12瓶&quot;,t:&quot;bottled&quot;,bc:&quot;6902020202020&quot;,lp:2490,sp:2190,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;永辉超市(朝阳店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;农夫山泉天然水&quot;,s:&quot;550ml×12瓶&quot;,t:&quot;bottled&quot;,bc:&quot;6902020202020&quot;,lp:2500,sp:2350,pr:[P(&quot;满减&quot;,&quot;满23减3&quot;,300,2300)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;永辉超市(朝阳店)&quot;,b:&quot;元气森林&quot;,n:&quot;白桃味苏打气泡水&quot;,s:&quot;480ml×6瓶&quot;,t:&quot;bottled&quot;,bc:&quot;6903030303030&quot;,lp:3300,sp:2990,pr:[P(&quot;满减&quot;,&quot;满28减3&quot;,300,2800)]},
+ {pf:&quot;京东&quot;,m:&quot;永辉超市(朝阳店)&quot;,b:&quot;元气森林&quot;,n:&quot;白桃气泡水&quot;,s:&quot;480ml×6瓶&quot;,t:&quot;bottled&quot;,bc:&quot;6903030303030&quot;,lp:3300,sp:3080,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;喜茶(国贸店)&quot;,b:&quot;喜茶&quot;,n:&quot;多肉葡萄&quot;,s:&quot;大杯/正常糖/去冰&quot;,t:&quot;made&quot;,bc:null,lp:2900,sp:2600,pr:[P(&quot;券&quot;,&quot;新客立减3元&quot;,300,0)]},
+ {pf:&quot;美团&quot;,m:&quot;喜茶(国贸店)&quot;,b:&quot;喜茶&quot;,n:&quot;多肉葡萄&quot;,s:&quot;大杯 正常糖 去冰&quot;,t:&quot;made&quot;,bc:null,lp:2900,sp:2500,pr:[P(&quot;满减&quot;,&quot;满25减4&quot;,400,2500)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;瑞幸咖啡(望京店)&quot;,b:&quot;瑞幸咖啡&quot;,n:&quot;生椰拿铁&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:1900,sp:1690,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;瑞幸咖啡(望京店)&quot;,b:&quot;瑞幸咖啡&quot;,n:&quot;生椰拿铁&quot;,s:&quot;大杯 标准&quot;,t:&quot;made&quot;,bc:null,lp:1900,sp:1590,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;瑞幸咖啡(望京店)&quot;,b:&quot;瑞幸咖啡&quot;,n:&quot;生椰拿铁&quot;,s:&quot;大杯　标准&quot;,t:&quot;made&quot;,bc:null,lp:1900,sp:1780,pr:[P(&quot;券&quot;,&quot;咖啡券减5&quot;,500,1500)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:410,sp:370,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:410,sp:370,pr:[P(&quot;券&quot;,&quot;满8减3&quot;,300,870)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1610,sp:1440,pr:[P(&quot;满减&quot;,&quot;满13减1&quot;,100,1340)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1530,sp:1370,pr:[P(&quot;满减&quot;,&quot;满11减1&quot;,100,1170)]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:360,sp:330,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:390,sp:350,pr:[P(&quot;满减&quot;,&quot;满3减1&quot;,100,350)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:360,sp:330,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:380,sp:340,pr:[P(&quot;券&quot;,&quot;满8减5&quot;,500,840)]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:360,sp:330,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,230)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:220,sp:200,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,200)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:230,sp:210,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:230,sp:210,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;百岁山&quot;,n:&quot;天然矿泉水&quot;,s:&quot;570ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902022203079&quot;,lp:350,sp:320,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;百岁山&quot;,n:&quot;天然矿泉水&quot;,s:&quot;570ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902022203079&quot;,lp:310,sp:280,pr:[P(&quot;满减&quot;,&quot;满1减1&quot;,100,180)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;元气森林&quot;,n:&quot;白桃味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030301086&quot;,lp:640,sp:580,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;元气森林&quot;,n:&quot;白桃味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030301086&quot;,lp:600,sp:540,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:620,sp:560,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:570,sp:510,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:530,sp:480,pr:[P(&quot;券&quot;,&quot;满9减2&quot;,200,980)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:500,sp:450,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,250)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;康师傅&quot;,n:&quot;冰红茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905050306124&quot;,lp:310,sp:280,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;康师傅&quot;,n:&quot;冰红茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905050306124&quot;,lp:320,sp:290,pr:[P(&quot;满减&quot;,&quot;满1减1&quot;,100,190)]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1680,sp:1500,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1720,sp:1540,pr:[P(&quot;券&quot;,&quot;满20减5&quot;,500,2040)]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:4260,sp:3810,pr:[P(&quot;满减&quot;,&quot;满38减3&quot;,300,3810)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:4180,sp:3740,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;伊利&quot;,n:&quot;纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6911110314209&quot;,lp:1970,sp:1760,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;伊利&quot;,n:&quot;纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6911110314209&quot;,lp:2160,sp:1930,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:2940,sp:2630,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:3190,sp:2850,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3400,sp:3040,pr:[P(&quot;满减&quot;,&quot;满28减3&quot;,300,2840)]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3790,sp:3390,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3470,sp:3100,pr:[P(&quot;满减&quot;,&quot;满30减3&quot;,300,3000)]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:990,sp:890,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:1060,sp:950,pr:[P(&quot;券&quot;,&quot;满11减3&quot;,300,1150)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1430,sp:1280,pr:[P(&quot;券&quot;,&quot;满14减3&quot;,300,1480)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1380,sp:1240,pr:[P(&quot;券&quot;,&quot;满17减3&quot;,300,1740)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:390,sp:350,pr:[P(&quot;满减&quot;,&quot;满1减1&quot;,100,150)]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:360,sp:330,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1410,sp:1260,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1620,sp:1450,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1530,sp:1370,pr:[P(&quot;券&quot;,&quot;满18减2&quot;,200,1870)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:410,sp:370,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:390,sp:350,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:390,sp:350,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:360,sp:330,pr:[P(&quot;券&quot;,&quot;满3减5&quot;,500,330)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;饮用天然水&quot;,s:&quot;550ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020201055&quot;,lp:210,sp:190,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;饮用天然水&quot;,s:&quot;550ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020201055&quot;,lp:210,sp:190,pr:[P(&quot;满减&quot;,&quot;满0减1&quot;,100,90)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:210,sp:190,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:230,sp:210,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;元气森林&quot;,n:&quot;白桃味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030301086&quot;,lp:640,sp:580,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;元气森林&quot;,n:&quot;白桃味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030301086&quot;,lp:580,sp:520,pr:[P(&quot;券&quot;,&quot;满7减5&quot;,500,720)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;元气森林&quot;,n:&quot;白桃味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030301086&quot;,lp:610,sp:550,pr:[P(&quot;满减&quot;,&quot;满5减1&quot;,100,550)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:610,sp:550,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:620,sp:560,pr:[P(&quot;满减&quot;,&quot;满5减1&quot;,100,560)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:610,sp:550,pr:[P(&quot;满减&quot;,&quot;满4减1&quot;,100,450)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:530,sp:480,pr:[P(&quot;券&quot;,&quot;满6减3&quot;,300,680)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:490,sp:440,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;三得利&quot;,n:&quot;无糖乌龙茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6904040305117&quot;,lp:510,sp:460,pr:[P(&quot;券&quot;,&quot;满9减5&quot;,500,960)]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;三得利&quot;,n:&quot;无糖乌龙茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6904040305117&quot;,lp:490,sp:440,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;三得利&quot;,n:&quot;无糖乌龙茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6904040305117&quot;,lp:520,sp:470,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:330,sp:300,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:310,sp:280,pr:[P(&quot;券&quot;,&quot;满2减2&quot;,200,280)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1540,sp:1380,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1640,sp:1470,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1720,sp:1540,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;脉动&quot;,n:&quot;青柠口味维生素饮料&quot;,s:&quot;600ml&quot;,t:&quot;bottled&quot;,bc:&quot;6908080311179&quot;,lp:490,sp:440,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;脉动&quot;,n:&quot;青柠口味维生素饮料&quot;,s:&quot;600ml&quot;,t:&quot;bottled&quot;,bc:&quot;6908080311179&quot;,lp:520,sp:470,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;维他&quot;,n:&quot;柠檬茶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6909090312186&quot;,lp:1940,sp:1740,pr:[P(&quot;满减&quot;,&quot;满17减1&quot;,100,1740)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;维他&quot;,n:&quot;柠檬茶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6909090312186&quot;,lp:1970,sp:1760,pr:[P(&quot;满减&quot;,&quot;满15减1&quot;,100,1560)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;旺仔&quot;,n:&quot;牛奶&quot;,s:&quot;245ml×4罐&quot;,t:&quot;bottled&quot;,bc:&quot;6910100313193&quot;,lp:1870,sp:1670,pr:[P(&quot;券&quot;,&quot;满18减3&quot;,300,1870)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;旺仔&quot;,n:&quot;牛奶&quot;,s:&quot;245ml×4罐&quot;,t:&quot;bottled&quot;,bc:&quot;6910100313193&quot;,lp:2010,sp:1800,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;旺仔&quot;,n:&quot;牛奶&quot;,s:&quot;245ml×4罐&quot;,t:&quot;bottled&quot;,bc:&quot;6910100313193&quot;,lp:2120,sp:1900,pr:[P(&quot;满减&quot;,&quot;满17减1&quot;,100,1700)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:3000,sp:2680,pr:[P(&quot;满减&quot;,&quot;满26减2&quot;,200,2680)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:2870,sp:2570,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3400,sp:3040,pr:[P(&quot;满减&quot;,&quot;满28减3&quot;,300,2840)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3430,sp:3070,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3790,sp:3390,pr:[P(&quot;满减&quot;,&quot;满33减3&quot;,300,3390)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:1000,sp:900,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:1070,sp:960,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:940,sp:840,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1310,sp:1170,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1270,sp:1140,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;北冰洋&quot;,n:&quot;橙味汽水&quot;,s:&quot;248ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6917170320261&quot;,lp:2570,sp:2300,pr:[P(&quot;满减&quot;,&quot;满21减2&quot;,200,2100)]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;北冰洋&quot;,n:&quot;橙味汽水&quot;,s:&quot;248ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6917170320261&quot;,lp:2860,sp:2560,pr:[P(&quot;券&quot;,&quot;满30减5&quot;,500,3060)]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:360,sp:330,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:380,sp:340,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:360,sp:330,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,230)]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:360,sp:330,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:350,sp:320,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:410,sp:370,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:390,sp:350,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;百岁山&quot;,n:&quot;天然矿泉水&quot;,s:&quot;570ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902022203079&quot;,lp:330,sp:300,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;百岁山&quot;,n:&quot;天然矿泉水&quot;,s:&quot;570ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902022203079&quot;,lp:300,sp:270,pr:[P(&quot;券&quot;,&quot;满2减2&quot;,200,270)]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:580,sp:520,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:610,sp:550,pr:[P(&quot;满减&quot;,&quot;满4减1&quot;,100,450)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:570,sp:510,pr:[P(&quot;满减&quot;,&quot;满4减1&quot;,100,410)]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:520,sp:470,pr:[P(&quot;满减&quot;,&quot;满4减1&quot;,100,470)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:470,sp:420,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:520,sp:470,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:330,sp:300,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:330,sp:300,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:340,sp:310,pr:[P(&quot;满减&quot;,&quot;满3减1&quot;,100,310)]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1690,sp:1510,pr:[P(&quot;满减&quot;,&quot;满14减1&quot;,100,1410)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1550,sp:1390,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;加多宝&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906061309155&quot;,lp:1550,sp:1390,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;加多宝&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906061309155&quot;,lp:1480,sp:1330,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:4180,sp:3740,pr:[P(&quot;券&quot;,&quot;满39减2&quot;,200,3940)]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:3700,sp:3310,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;脉动&quot;,n:&quot;青柠口味维生素饮料&quot;,s:&quot;600ml&quot;,t:&quot;bottled&quot;,bc:&quot;6908080311179&quot;,lp:510,sp:460,pr:[P(&quot;满减&quot;,&quot;满4减1&quot;,100,460)]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;脉动&quot;,n:&quot;青柠口味维生素饮料&quot;,s:&quot;600ml&quot;,t:&quot;bottled&quot;,bc:&quot;6908080311179&quot;,lp:510,sp:460,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;脉动&quot;,n:&quot;青柠口味维生素饮料&quot;,s:&quot;600ml&quot;,t:&quot;bottled&quot;,bc:&quot;6908080311179&quot;,lp:510,sp:460,pr:[P(&quot;满减&quot;,&quot;满4减1&quot;,100,460)]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;旺仔&quot;,n:&quot;牛奶&quot;,s:&quot;245ml×4罐&quot;,t:&quot;bottled&quot;,bc:&quot;6910100313193&quot;,lp:1970,sp:1760,pr:[P(&quot;券&quot;,&quot;满22减2&quot;,200,2260)]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;旺仔&quot;,n:&quot;牛奶&quot;,s:&quot;245ml×4罐&quot;,t:&quot;bottled&quot;,bc:&quot;6910100313193&quot;,lp:2070,sp:1850,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3710,sp:3320,pr:[P(&quot;满减&quot;,&quot;满32减3&quot;,300,3220)]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3470,sp:3100,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;椰树&quot;,n:&quot;椰汁&quot;,s:&quot;245ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6916160319254&quot;,lp:2360,sp:2110,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;椰树&quot;,n:&quot;椰汁&quot;,s:&quot;245ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6916160319254&quot;,lp:2430,sp:2170,pr:[P(&quot;满减&quot;,&quot;满20减2&quot;,200,2070)]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:350,sp:320,pr:[P(&quot;满减&quot;,&quot;满1减1&quot;,100,120)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:360,sp:330,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:350,sp:320,pr:[P(&quot;券&quot;,&quot;满8减5&quot;,500,820)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:390,sp:350,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,250)]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;饮用天然水&quot;,s:&quot;550ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020201055&quot;,lp:220,sp:200,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;饮用天然水&quot;,s:&quot;550ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020201055&quot;,lp:210,sp:190,pr:[P(&quot;券&quot;,&quot;满1减3&quot;,300,190)]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:220,sp:200,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:200,sp:180,pr:[P(&quot;满减&quot;,&quot;满-1减1&quot;,100,-20)]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:210,sp:190,pr:[P(&quot;券&quot;,&quot;满6减2&quot;,200,690)]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:510,sp:460,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:520,sp:470,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,270)]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;三得利&quot;,n:&quot;无糖乌龙茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6904040305117&quot;,lp:450,sp:410,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,210)]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;三得利&quot;,n:&quot;无糖乌龙茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6904040305117&quot;,lp:520,sp:470,pr:[P(&quot;券&quot;,&quot;满4减2&quot;,200,470)]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:330,sp:300,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:340,sp:310,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:4030,sp:3600,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:4140,sp:3700,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:3900,sp:3490,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;维他&quot;,n:&quot;柠檬茶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6909090312186&quot;,lp:1930,sp:1730,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;维他&quot;,n:&quot;柠檬茶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6909090312186&quot;,lp:1970,sp:1760,pr:[P(&quot;券&quot;,&quot;满19减5&quot;,500,1960)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;维他&quot;,n:&quot;柠檬茶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6909090312186&quot;,lp:1880,sp:1680,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;旺仔&quot;,n:&quot;牛奶&quot;,s:&quot;245ml×4罐&quot;,t:&quot;bottled&quot;,bc:&quot;6910100313193&quot;,lp:2090,sp:1870,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;旺仔&quot;,n:&quot;牛奶&quot;,s:&quot;245ml×4罐&quot;,t:&quot;bottled&quot;,bc:&quot;6910100313193&quot;,lp:2020,sp:1810,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;旺仔&quot;,n:&quot;牛奶&quot;,s:&quot;245ml×4罐&quot;,t:&quot;bottled&quot;,bc:&quot;6910100313193&quot;,lp:1890,sp:1690,pr:[P(&quot;满减&quot;,&quot;满14减1&quot;,100,1490)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:940,sp:840,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:940,sp:840,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1240,sp:1110,pr:[P(&quot;券&quot;,&quot;满11减2&quot;,200,1110)]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1380,sp:1240,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1250,sp:1120,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;北冰洋&quot;,n:&quot;橙味汽水&quot;,s:&quot;248ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6917170320261&quot;,lp:2650,sp:2370,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;北冰洋&quot;,n:&quot;橙味汽水&quot;,s:&quot;248ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6917170320261&quot;,lp:2460,sp:2200,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1560,sp:1400,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1380,sp:1240,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;饮用天然水&quot;,s:&quot;550ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020201055&quot;,lp:220,sp:200,pr:[P(&quot;券&quot;,&quot;满7减2&quot;,200,700)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;饮用天然水&quot;,s:&quot;550ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020201055&quot;,lp:200,sp:180,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;元气森林&quot;,n:&quot;白桃味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030301086&quot;,lp:610,sp:550,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;元气森林&quot;,n:&quot;白桃味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030301086&quot;,lp:580,sp:520,pr:[P(&quot;满减&quot;,&quot;满4减1&quot;,100,420)]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;元气森林&quot;,n:&quot;白桃味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030301086&quot;,lp:640,sp:580,pr:[P(&quot;满减&quot;,&quot;满5减1&quot;,100,580)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:570,sp:510,pr:[P(&quot;券&quot;,&quot;满5减5&quot;,500,510)]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:560,sp:500,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;三得利&quot;,n:&quot;无糖乌龙茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6904040305117&quot;,lp:490,sp:440,pr:[P(&quot;满减&quot;,&quot;满4减1&quot;,100,440)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;三得利&quot;,n:&quot;无糖乌龙茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6904040305117&quot;,lp:480,sp:430,pr:[P(&quot;满减&quot;,&quot;满4减1&quot;,100,430)]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;康师傅&quot;,n:&quot;冰红茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905050306124&quot;,lp:340,sp:310,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;康师傅&quot;,n:&quot;冰红茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905050306124&quot;,lp:300,sp:270,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1790,sp:1600,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1550,sp:1390,pr:[P(&quot;券&quot;,&quot;满18减2&quot;,200,1890)]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;加多宝&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906061309155&quot;,lp:1520,sp:1360,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;加多宝&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906061309155&quot;,lp:1560,sp:1400,pr:[P(&quot;券&quot;,&quot;满14减2&quot;,200,1400)]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;脉动&quot;,n:&quot;青柠口味维生素饮料&quot;,s:&quot;600ml&quot;,t:&quot;bottled&quot;,bc:&quot;6908080311179&quot;,lp:470,sp:420,pr:[P(&quot;券&quot;,&quot;满4减3&quot;,300,420)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;脉动&quot;,n:&quot;青柠口味维生素饮料&quot;,s:&quot;600ml&quot;,t:&quot;bottled&quot;,bc:&quot;6908080311179&quot;,lp:470,sp:420,pr:[P(&quot;券&quot;,&quot;满9减3&quot;,300,920)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;维他&quot;,n:&quot;柠檬茶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6909090312186&quot;,lp:1820,sp:1630,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;维他&quot;,n:&quot;柠檬茶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6909090312186&quot;,lp:1930,sp:1730,pr:[P(&quot;满减&quot;,&quot;满16减1&quot;,100,1630)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;维他&quot;,n:&quot;柠檬茶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6909090312186&quot;,lp:1710,sp:1530,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;伊利&quot;,n:&quot;纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6911110314209&quot;,lp:1940,sp:1740,pr:[P(&quot;满减&quot;,&quot;满15减1&quot;,100,1540)]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;伊利&quot;,n:&quot;纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6911110314209&quot;,lp:2120,sp:1900,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;伊利&quot;,n:&quot;纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6911110314209&quot;,lp:2060,sp:1840,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:3310,sp:2960,pr:[P(&quot;券&quot;,&quot;满29减3&quot;,300,2960)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:2970,sp:2660,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3430,sp:3070,pr:[P(&quot;满减&quot;,&quot;满30减3&quot;,300,3070)]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3500,sp:3130,pr:[P(&quot;满减&quot;,&quot;满30减3&quot;,300,3030)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:1030,sp:920,pr:[P(&quot;满减&quot;,&quot;满9减1&quot;,100,920)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:1000,sp:900,pr:[P(&quot;满减&quot;,&quot;满9减1&quot;,100,900)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1380,sp:1240,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1270,sp:1140,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1360,sp:1220,pr:[P(&quot;满减&quot;,&quot;满11减1&quot;,100,1120)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;椰树&quot;,n:&quot;椰汁&quot;,s:&quot;245ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6916160319254&quot;,lp:2340,sp:2090,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;椰树&quot;,n:&quot;椰汁&quot;,s:&quot;245ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6916160319254&quot;,lp:2500,sp:2240,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:390,sp:350,pr:[P(&quot;券&quot;,&quot;满8减2&quot;,200,850)]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:390,sp:350,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1530,sp:1370,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1600,sp:1430,pr:[P(&quot;满减&quot;,&quot;满13减1&quot;,100,1330)]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:360,sp:330,pr:[P(&quot;券&quot;,&quot;满5减2&quot;,200,530)]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:400,sp:360,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:230,sp:210,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:220,sp:200,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,200)]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:230,sp:210,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;百岁山&quot;,n:&quot;天然矿泉水&quot;,s:&quot;570ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902022203079&quot;,lp:340,sp:310,pr:[P(&quot;满减&quot;,&quot;满3减1&quot;,100,310)]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;百岁山&quot;,n:&quot;天然矿泉水&quot;,s:&quot;570ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902022203079&quot;,lp:310,sp:280,pr:[P(&quot;满减&quot;,&quot;满1减1&quot;,100,180)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;百岁山&quot;,n:&quot;天然矿泉水&quot;,s:&quot;570ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902022203079&quot;,lp:320,sp:290,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:560,sp:500,pr:[P(&quot;券&quot;,&quot;满5减3&quot;,300,500)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:630,sp:570,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;康师傅&quot;,n:&quot;冰红茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905050306124&quot;,lp:330,sp:300,pr:[P(&quot;券&quot;,&quot;满8减2&quot;,200,800)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;康师傅&quot;,n:&quot;冰红茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905050306124&quot;,lp:310,sp:280,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:340,sp:310,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:300,sp:270,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1720,sp:1540,pr:[P(&quot;券&quot;,&quot;满20减3&quot;,300,2040)]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1690,sp:1510,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1720,sp:1540,pr:[P(&quot;满减&quot;,&quot;满15减1&quot;,100,1540)]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:4340,sp:3880,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:3900,sp:3490,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;伊利&quot;,n:&quot;纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6911110314209&quot;,lp:2160,sp:1930,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;伊利&quot;,n:&quot;纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6911110314209&quot;,lp:2220,sp:1990,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:3290,sp:2940,pr:[P(&quot;券&quot;,&quot;满29减3&quot;,300,2940)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:3190,sp:2850,pr:[P(&quot;满减&quot;,&quot;满28减2&quot;,200,2850)]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:3190,sp:2850,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3650,sp:3260,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3760,sp:3360,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3610,sp:3230,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;椰树&quot;,n:&quot;椰汁&quot;,s:&quot;245ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6916160319254&quot;,lp:2630,sp:2350,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;椰树&quot;,n:&quot;椰汁&quot;,s:&quot;245ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6916160319254&quot;,lp:2460,sp:2200,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;奈雪的茶(朝阳大悦城店)&quot;,b:&quot;奈雪的茶&quot;,n:&quot;霸气橙子&quot;,s:&quot;大杯/少糖/去冰&quot;,t:&quot;made&quot;,bc:null,lp:3200,sp:2910,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;奈雪的茶(朝阳大悦城店)&quot;,b:&quot;奈雪的茶&quot;,n:&quot;霸气橙子&quot;,s:&quot;大杯/少糖/去冰&quot;,t:&quot;made&quot;,bc:null,lp:3250,sp:2960,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;奈雪的茶(朝阳大悦城店)&quot;,b:&quot;奈雪的茶&quot;,n:&quot;芝士草莓&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:3580,sp:3260,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;奈雪的茶(朝阳大悦城店)&quot;,b:&quot;奈雪的茶&quot;,n:&quot;芝士草莓&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:3300,sp:3000,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;奈雪的茶(朝阳大悦城店)&quot;,b:&quot;奈雪的茶&quot;,n:&quot;芝士草莓&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:3440,sp:3130,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;奈雪的茶(朝阳大悦城店)&quot;,b:&quot;奈雪的茶&quot;,n:&quot;鸭屎香宝藏茶&quot;,s:&quot;大杯/标准糖/常温&quot;,t:&quot;made&quot;,bc:null,lp:2360,sp:2150,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;京东&quot;,m:&quot;奈雪的茶(朝阳大悦城店)&quot;,b:&quot;奈雪的茶&quot;,n:&quot;鸭屎香宝藏茶&quot;,s:&quot;大杯/标准糖/常温&quot;,t:&quot;made&quot;,bc:null,lp:2360,sp:2150,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;奈雪的茶(朝阳大悦城店)&quot;,b:&quot;奈雪的茶&quot;,n:&quot;鸭屎香宝藏茶&quot;,s:&quot;大杯/标准糖/常温&quot;,t:&quot;made&quot;,bc:null,lp:2540,sp:2310,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;古茗(望京SOHO店)&quot;,b:&quot;古茗&quot;,n:&quot;超A芝士葡萄&quot;,s:&quot;大杯/正常冰&quot;,t:&quot;made&quot;,bc:null,lp:2000,sp:1820,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;古茗(望京SOHO店)&quot;,b:&quot;古茗&quot;,n:&quot;超A芝士葡萄&quot;,s:&quot;大杯/正常冰&quot;,t:&quot;made&quot;,bc:null,lp:2140,sp:1950,pr:[P(&quot;满减&quot;,&quot;满18减1&quot;,100,1850)]},
+ {pf:&quot;京东&quot;,m:&quot;古茗(望京SOHO店)&quot;,b:&quot;古茗&quot;,n:&quot;超A芝士葡萄&quot;,s:&quot;大杯/正常冰&quot;,t:&quot;made&quot;,bc:null,lp:2060,sp:1880,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;美团&quot;,m:&quot;古茗(望京SOHO店)&quot;,b:&quot;古茗&quot;,n:&quot;椰椰芒芒&quot;,s:&quot;大杯/少冰&quot;,t:&quot;made&quot;,bc:null,lp:1820,sp:1660,pr:[P(&quot;满减&quot;,&quot;满14减1&quot;,100,1460)]},
+ {pf:&quot;京东&quot;,m:&quot;古茗(望京SOHO店)&quot;,b:&quot;古茗&quot;,n:&quot;椰椰芒芒&quot;,s:&quot;大杯/少冰&quot;,t:&quot;made&quot;,bc:null,lp:1930,sp:1760,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;古茗(望京SOHO店)&quot;,b:&quot;古茗&quot;,n:&quot;椰椰芒芒&quot;,s:&quot;大杯/少冰&quot;,t:&quot;made&quot;,bc:null,lp:1980,sp:1800,pr:[P(&quot;满减&quot;,&quot;满18减1&quot;,100,1800)]},
+ {pf:&quot;京东&quot;,m:&quot;古茗(望京SOHO店)&quot;,b:&quot;古茗&quot;,n:&quot;云雾轻乳茶&quot;,s:&quot;中杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:1400,sp:1280,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;古茗(望京SOHO店)&quot;,b:&quot;古茗&quot;,n:&quot;云雾轻乳茶&quot;,s:&quot;中杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:1430,sp:1300,pr:[P(&quot;满减&quot;,&quot;满12减1&quot;,100,1200)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;蜜雪冰城(五道口店)&quot;,b:&quot;蜜雪冰城&quot;,n:&quot;珍珠奶茶&quot;,s:&quot;大杯/标准糖&quot;,t:&quot;made&quot;,bc:null,lp:850,sp:780,pr:[P(&quot;满减&quot;,&quot;满5减1&quot;,100,580)]},
+ {pf:&quot;美团&quot;,m:&quot;蜜雪冰城(五道口店)&quot;,b:&quot;蜜雪冰城&quot;,n:&quot;珍珠奶茶&quot;,s:&quot;大杯/标准糖&quot;,t:&quot;made&quot;,bc:null,lp:860,sp:790,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;京东&quot;,m:&quot;蜜雪冰城(五道口店)&quot;,b:&quot;蜜雪冰城&quot;,n:&quot;珍珠奶茶&quot;,s:&quot;大杯/标准糖&quot;,t:&quot;made&quot;,bc:null,lp:910,sp:830,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;京东&quot;,m:&quot;蜜雪冰城(五道口店)&quot;,b:&quot;蜜雪冰城&quot;,n:&quot;冰鲜柠檬水&quot;,s:&quot;大杯/少糖&quot;,t:&quot;made&quot;,bc:null,lp:560,sp:510,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;蜜雪冰城(五道口店)&quot;,b:&quot;蜜雪冰城&quot;,n:&quot;冰鲜柠檬水&quot;,s:&quot;大杯/少糖&quot;,t:&quot;made&quot;,bc:null,lp:510,sp:470,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;蜜雪冰城(五道口店)&quot;,b:&quot;蜜雪冰城&quot;,n:&quot;冰鲜柠檬水&quot;,s:&quot;大杯/少糖&quot;,t:&quot;made&quot;,bc:null,lp:570,sp:520,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;蜜雪冰城(五道口店)&quot;,b:&quot;蜜雪冰城&quot;,n:&quot;摇摇奶昔&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:1040,sp:950,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;蜜雪冰城(五道口店)&quot;,b:&quot;蜜雪冰城&quot;,n:&quot;摇摇奶昔&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:1040,sp:950,pr:[P(&quot;满减&quot;,&quot;满8减1&quot;,100,850)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;蜜雪冰城(五道口店)&quot;,b:&quot;蜜雪冰城&quot;,n:&quot;摇摇奶昔&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:1020,sp:930,pr:[P(&quot;券&quot;,&quot;满14减3&quot;,300,1430)]},
+ {pf:&quot;美团&quot;,m:&quot;星巴克(嘉里中心店)&quot;,b:&quot;星巴克&quot;,n:&quot;拿铁&quot;,s:&quot;大杯/热&quot;,t:&quot;made&quot;,bc:null,lp:3410,sp:3100,pr:[P(&quot;满减&quot;,&quot;满31减3&quot;,300,3100)]},
+ {pf:&quot;京东&quot;,m:&quot;星巴克(嘉里中心店)&quot;,b:&quot;星巴克&quot;,n:&quot;拿铁&quot;,s:&quot;大杯/热&quot;,t:&quot;made&quot;,bc:null,lp:3470,sp:3160,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;星巴克(嘉里中心店)&quot;,b:&quot;星巴克&quot;,n:&quot;拿铁&quot;,s:&quot;大杯/热&quot;,t:&quot;made&quot;,bc:null,lp:3550,sp:3230,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;星巴克(嘉里中心店)&quot;,b:&quot;星巴克&quot;,n:&quot;美式咖啡&quot;,s:&quot;大杯/冰&quot;,t:&quot;made&quot;,bc:null,lp:3080,sp:2800,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;星巴克(嘉里中心店)&quot;,b:&quot;星巴克&quot;,n:&quot;美式咖啡&quot;,s:&quot;大杯/冰&quot;,t:&quot;made&quot;,bc:null,lp:3010,sp:2740,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;美团&quot;,m:&quot;星巴克(嘉里中心店)&quot;,b:&quot;星巴克&quot;,n:&quot;抹茶星冰乐&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:3910,sp:3560,pr:[P(&quot;券&quot;,&quot;满40减5&quot;,500,4060)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;星巴克(嘉里中心店)&quot;,b:&quot;星巴克&quot;,n:&quot;抹茶星冰乐&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:3990,sp:3630,pr:[P(&quot;券&quot;,&quot;满38减5&quot;,500,3830)]},
+ {pf:&quot;京东&quot;,m:&quot;星巴克(嘉里中心店)&quot;,b:&quot;星巴克&quot;,n:&quot;抹茶星冰乐&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:4150,sp:3780,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;库迪咖啡(西二旗店)&quot;,b:&quot;库迪咖啡&quot;,n:&quot;生椰拿铁&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:1380,sp:1260,pr:[P(&quot;满减&quot;,&quot;满10减1&quot;,100,1060)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;库迪咖啡(西二旗店)&quot;,b:&quot;库迪咖啡&quot;,n:&quot;生椰拿铁&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:1320,sp:1200,pr:[P(&quot;券&quot;,&quot;满17减2&quot;,200,1700)]},
+ {pf:&quot;美团&quot;,m:&quot;库迪咖啡(西二旗店)&quot;,b:&quot;库迪咖啡&quot;,n:&quot;生椰拿铁&quot;,s:&quot;大杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:1340,sp:1220,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;库迪咖啡(西二旗店)&quot;,b:&quot;库迪咖啡&quot;,n:&quot;茉莉花香拿铁&quot;,s:&quot;大杯/少冰&quot;,t:&quot;made&quot;,bc:null,lp:1460,sp:1330,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;库迪咖啡(西二旗店)&quot;,b:&quot;库迪咖啡&quot;,n:&quot;茉莉花香拿铁&quot;,s:&quot;大杯/少冰&quot;,t:&quot;made&quot;,bc:null,lp:1510,sp:1380,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;京东&quot;,m:&quot;库迪咖啡(西二旗店)&quot;,b:&quot;库迪咖啡&quot;,n:&quot;茉莉花香拿铁&quot;,s:&quot;大杯/少冰&quot;,t:&quot;made&quot;,bc:null,lp:1610,sp:1470,pr:[P(&quot;第二件半价&quot;,&quot;第二件半价&quot;,0,0)]},
+ {pf:&quot;京东&quot;,m:&quot;CoCo都可(西单店)&quot;,b:&quot;CoCo都可&quot;,n:&quot;珍珠奶茶&quot;,s:&quot;大杯/半糖&quot;,t:&quot;made&quot;,bc:null,lp:1230,sp:1120,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;CoCo都可(西单店)&quot;,b:&quot;CoCo都可&quot;,n:&quot;珍珠奶茶&quot;,s:&quot;大杯/半糖&quot;,t:&quot;made&quot;,bc:null,lp:1360,sp:1240,pr:[P(&quot;满减&quot;,&quot;满11减1&quot;,100,1140)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;CoCo都可(西单店)&quot;,b:&quot;CoCo都可&quot;,n:&quot;珍珠奶茶&quot;,s:&quot;大杯/半糖&quot;,t:&quot;made&quot;,bc:null,lp:1350,sp:1230,pr:[P(&quot;满减&quot;,&quot;满10减1&quot;,100,1030)]},
+ {pf:&quot;京东&quot;,m:&quot;CoCo都可(西单店)&quot;,b:&quot;CoCo都可&quot;,n:&quot;百香果双响炮&quot;,s:&quot;大杯/去冰&quot;,t:&quot;made&quot;,bc:null,lp:1610,sp:1470,pr:[P(&quot;券&quot;,&quot;满16减2&quot;,200,1670)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;CoCo都可(西单店)&quot;,b:&quot;CoCo都可&quot;,n:&quot;百香果双响炮&quot;,s:&quot;大杯/去冰&quot;,t:&quot;made&quot;,bc:null,lp:1620,sp:1480,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;CoCo都可(西单店)&quot;,b:&quot;CoCo都可&quot;,n:&quot;百香果双响炮&quot;,s:&quot;大杯/去冰&quot;,t:&quot;made&quot;,bc:null,lp:1540,sp:1400,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:410,sp:370,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1560,sp:1400,pr:[P(&quot;满减&quot;,&quot;满13减1&quot;,100,1300)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:380,sp:340,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,240)]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;百岁山&quot;,n:&quot;天然矿泉水&quot;,s:&quot;570ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902022203079&quot;,lp:330,sp:300,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,200)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;元气森林&quot;,n:&quot;白桃味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030301086&quot;,lp:620,sp:560,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:590,sp:530,pr:[P(&quot;满减&quot;,&quot;满4减1&quot;,100,430)]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:510,sp:460,pr:[P(&quot;满减&quot;,&quot;满3减1&quot;,100,360)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;康师傅&quot;,n:&quot;冰红茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905050306124&quot;,lp:310,sp:280,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1700,sp:1520,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:4220,sp:3770,pr:[P(&quot;满减&quot;,&quot;满36减3&quot;,300,3670)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;伊利&quot;,n:&quot;纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6911110314209&quot;,lp:2060,sp:1840,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:3060,sp:2740,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;美团&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:1030,sp:920,pr:[P(&quot;满减&quot;,&quot;满8减1&quot;,100,820)]},
+ {pf:&quot;京东&quot;,m:&quot;沃尔玛(望京店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1410,sp:1260,pr:[P(&quot;满减&quot;,&quot;满11减1&quot;,100,1160)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:380,sp:340,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:400,sp:360,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:380,sp:340,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;饮用天然水&quot;,s:&quot;550ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020201055&quot;,lp:210,sp:190,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;怡宝&quot;,n:&quot;纯净水&quot;,s:&quot;555ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902021202062&quot;,lp:220,sp:200,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:510,sp:460,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:320,sp:290,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;脉动&quot;,n:&quot;青柠口味维生素饮料&quot;,s:&quot;600ml&quot;,t:&quot;bottled&quot;,bc:&quot;6908080311179&quot;,lp:500,sp:450,pr:[P(&quot;满减&quot;,&quot;满3减1&quot;,100,350)]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;维他&quot;,n:&quot;柠檬茶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6909090312186&quot;,lp:1960,sp:1750,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:2930,sp:2620,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;汇源&quot;,n:&quot;100%橙汁&quot;,s:&quot;1L&quot;,t:&quot;bottled&quot;,bc:&quot;6915150318247&quot;,lp:1280,sp:1150,pr:[P(&quot;满减&quot;,&quot;满10减1&quot;,100,1050)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;7-Eleven(国贸店)&quot;,b:&quot;北冰洋&quot;,n:&quot;橙味汽水&quot;,s:&quot;248ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6917170320261&quot;,lp:2720,sp:2430,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:360,sp:330,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,230)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:360,sp:330,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;百岁山&quot;,n:&quot;天然矿泉水&quot;,s:&quot;570ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902022203079&quot;,lp:310,sp:280,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;京东&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1620,sp:1450,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;加多宝&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906061309155&quot;,lp:1520,sp:1360,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:3940,sp:3520,pr:[P(&quot;满减&quot;,&quot;满34减3&quot;,300,3420)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;旺仔&quot;,n:&quot;牛奶&quot;,s:&quot;245ml×4罐&quot;,t:&quot;bottled&quot;,bc:&quot;6910100313193&quot;,lp:2010,sp:1800,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3590,sp:3210,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;全家FamilyMart(三里屯店)&quot;,b:&quot;椰树&quot;,n:&quot;椰汁&quot;,s:&quot;245ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6916160319254&quot;,lp:2390,sp:2140,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:350,sp:320,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,220)]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;芬达&quot;,n:&quot;橙味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010105048&quot;,lp:360,sp:330,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;饮用天然水&quot;,s:&quot;550ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020201055&quot;,lp:210,sp:190,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;东方树叶&quot;,n:&quot;茉莉花茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020304100&quot;,lp:510,sp:460,pr:[P(&quot;满减&quot;,&quot;满3减1&quot;,100,360)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;三得利&quot;,n:&quot;无糖乌龙茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6904040305117&quot;,lp:490,sp:440,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;美团&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:330,sp:300,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,200,0)]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:940,sp:840,pr:[P(&quot;满减&quot;,&quot;满7减1&quot;,100,740)]},
+ {pf:&quot;京东&quot;,m:&quot;盒马鲜生(大望路店)&quot;,b:&quot;北冰洋&quot;,n:&quot;橙味汽水&quot;,s:&quot;248ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6917170320261&quot;,lp:2550,sp:2280,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1470,sp:1320,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;农夫山泉&quot;,n:&quot;饮用天然水&quot;,s:&quot;550ml&quot;,t:&quot;bottled&quot;,bc:&quot;6902020201055&quot;,lp:210,sp:190,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:560,sp:500,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;三得利&quot;,n:&quot;无糖乌龙茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6904040305117&quot;,lp:480,sp:430,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;康师傅&quot;,n:&quot;冰红茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905050306124&quot;,lp:320,sp:290,pr:[P(&quot;满减&quot;,&quot;满1减1&quot;,100,190)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;王老吉&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906060308148&quot;,lp:1660,sp:1490,pr:[P(&quot;满减&quot;,&quot;满13减1&quot;,100,1390)]},
+ {pf:&quot;京东&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;加多宝&quot;,n:&quot;凉茶&quot;,s:&quot;310ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6906061309155&quot;,lp:1540,sp:1380,pr:[P(&quot;满减&quot;,&quot;满12减1&quot;,100,1280)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;脉动&quot;,n:&quot;青柠口味维生素饮料&quot;,s:&quot;600ml&quot;,t:&quot;bottled&quot;,bc:&quot;6908080311179&quot;,lp:470,sp:420,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,100,0)]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;蒙牛&quot;,n:&quot;特仑苏纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6912120315216&quot;,lp:3140,sp:2810,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;安慕希&quot;,n:&quot;希腊风味酸奶&quot;,s:&quot;205g×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6913130316223&quot;,lp:3470,sp:3100,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;美汁源&quot;,n:&quot;果粒橙&quot;,s:&quot;1.25L&quot;,t:&quot;bottled&quot;,bc:&quot;6914140317230&quot;,lp:1010,sp:910,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;物美超市(学院路店)&quot;,b:&quot;椰树&quot;,n:&quot;椰汁&quot;,s:&quot;245ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6916160319254&quot;,lp:2410,sp:2160,pr:[P(&quot;满减&quot;,&quot;满20减2&quot;,200,2060)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;可口可乐&quot;,n:&quot;无糖可乐&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010102017&quot;,lp:390,sp:350,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;百事可乐&quot;,n:&quot;经典百事&quot;,s:&quot;330ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6901011103024&quot;,lp:1560,sp:1400,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;雪碧&quot;,n:&quot;柠檬味汽水&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6901010104031&quot;,lp:380,sp:340,pr:[P(&quot;满减&quot;,&quot;满2减1&quot;,100,240)]},
+ {pf:&quot;美团&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;元气森林&quot;,n:&quot;青瓜味苏打气泡水&quot;,s:&quot;480ml&quot;,t:&quot;bottled&quot;,bc:&quot;6903030302093&quot;,lp:590,sp:530,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;康师傅&quot;,n:&quot;冰红茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905050306124&quot;,lp:320,sp:290,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;京东&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;统一&quot;,n:&quot;绿茶&quot;,s:&quot;500ml&quot;,t:&quot;bottled&quot;,bc:&quot;6905051307131&quot;,lp:320,sp:290,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;红牛&quot;,n:&quot;维生素功能饮料&quot;,s:&quot;250ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6907070310162&quot;,lp:4120,sp:3680,pr:[P(&quot;满减&quot;,&quot;满35减3&quot;,300,3580)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;伊利&quot;,n:&quot;纯牛奶&quot;,s:&quot;250ml×6盒&quot;,t:&quot;bottled&quot;,bc:&quot;6911110314209&quot;,lp:2190,sp:1960,pr:[P(&quot;补贴&quot;,&quot;平台补贴&quot;,300,0)]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;便利蜂(中关村店)&quot;,b:&quot;椰树&quot;,n:&quot;椰汁&quot;,s:&quot;245ml×6罐&quot;,t:&quot;bottled&quot;,bc:&quot;6916160319254&quot;,lp:2540,sp:2270,pr:[]},
+ {pf:&quot;京东&quot;,m:&quot;奈雪的茶(朝阳大悦城店)&quot;,b:&quot;奈雪的茶&quot;,n:&quot;霸气橙子&quot;,s:&quot;大杯/少糖/去冰&quot;,t:&quot;made&quot;,bc:null,lp:3280,sp:2930,pr:[]},
+ {pf:&quot;阿里闪购&quot;,m:&quot;古茗(望京SOHO店)&quot;,b:&quot;古茗&quot;,n:&quot;云雾轻乳茶&quot;,s:&quot;中杯/标准&quot;,t:&quot;made&quot;,bc:null,lp:1440,sp:1290,pr:[]},
+ {pf:&quot;美团&quot;,m:&quot;星巴克(嘉里中心店)&quot;,b:&quot;星巴克&quot;,n:&quot;美式咖啡&quot;,s:&quot;大杯/冰&quot;,t:&quot;made&quot;,bc:null,lp:3100,sp:2770,pr:[]},
+];
+
+/* ===== 匹配引擎（商户+商品 单元键）===== */
+const norm = s => s.replace(/[\s　/／·,，、]+/g,'').toLowerCase();
+const unitKey = l => l.bc ? `${norm(l.m)}|b:${l.bc}` : `${norm(l.m)}|m:${norm(l.b)}|${norm(l.n)}|${norm(l.s)}`;
+function buildUnits(listings){
+  const g = {};
+  listings.forEach(l => { const k = unitKey(l); if(!g[k]) g[k] = []; g[k].push(l); });
+  const units = Object.entries(g).map(([k, ls], i) => {
+    const r = ls[0];
+    return { id:'u'+i, merchant:r.m, name:`${r.b} ${r.n} ${r.s}`, brand:r.b, spec:r.s, type:r.t, listings:ls };
+  });
+  units.sort((a,b)=> b.listings.length-a.listings.length || a.merchant.localeCompare(b.merchant) || a.name.localeCompare(b.name));
+  return units;
+}
+const UNITS = buildUnits(LISTINGS);
+function searchUnits(q){
+  const nq = norm(q||'');
+  if(!nq) return UNITS;
+  return UNITS.filter(u => (norm(u.name)+norm(u.merchant)+u.listings.map(l=>norm(l.n+l.b+l.m)).join('')).includes(nq));
+}
+
+/* ===== 到手价引擎（v0.3：首单券 + 封顶防负价）===== */
+const KIND_ORDER = {&quot;第二件半价&quot;:0,&quot;满减&quot;:1,&quot;补贴&quot;:2,&quot;券&quot;:3,&quot;首单券&quot;:4};
+function computePrice(l, qty, includeDelivery, minOrder, foOn){
+  qty = Math.max(1, qty|0);
+  const subtotal = l.sp * qty;
+  const lines = [{label:&quot;售价小计&quot;, amount:subtotal}];
+  const ord = k => KIND_ORDER[k] !== undefined ? KIND_ORDER[k] : 99;
+  let promos = l.pr.slice();
+  if(foOn &amp;&amp; FIRST_ORDER[l.pf]){
+    const f = FIRST_ORDER[l.pf];
+    promos.push({kind:&quot;首单券&quot;, desc:f.desc, value:f.value, threshold:f.threshold});
+  }
+  promos.sort((a,b)=>ord(a.kind)-ord(b.kind));
+  let cur = subtotal, disc = 0;
+  for(const p of promos){
+    let a = 0;
+    if(p.kind===&quot;第二件半价&quot;){ if(qty>=2) a = Math.floor(l.sp/2)*Math.floor(qty/2); }
+    else if(p.kind===&quot;满减&quot;){ a = cur>=p.threshold ? p.value : 0; }
+    else if(p.kind===&quot;补贴&quot;){ a = Math.min(p.value, cur); }
+    else if(p.kind===&quot;券&quot;||p.kind===&quot;首单券&quot;){ a = cur>=p.threshold ? p.value : 0; }
+    a = Math.min(a, cur);
+    if(a>0){ cur-=a; disc+=a; lines.push({label:p.desc, amount:-a, fo:p.kind===&quot;首单券&quot;}); }
+  }
+  let fee = 0;
+  if(includeDelivery){
+    const d = DELIVERY[l.pf];
+    fee = subtotal>=d.freeOver ? 0 : d.base;
+    lines.push({label: fee>0 ? &quot;配送费&quot; : `配送费（满${d.freeOver/100}元免）`, amount:fee});
+    cur += fee;
+  }
+  const orderable = subtotal >= minOrder;
+  return { platform:l.pf, final:cur, orderable, lines,
+           note: orderable ? &quot;&quot; : `未达起送价${minOrder/100}元，不可下单` };
+}
+
+
+/* ===== 位置：GPS / 商圈网格（与仓库版同构的本地实现）===== */
+const GRIDS = {
+  wangjing:{name:&quot;望京商圈&quot;,lat:39.9960,lng:116.4740},
+  guomao:{name:&quot;国贸商圈&quot;,lat:39.9088,lng:116.4590},
+  zhongguancun:{name:&quot;中关村商圈&quot;,lat:39.9832,lng:116.3160},
+  wudaokou:{name:&quot;五道口商圈&quot;,lat:39.9925,lng:116.3380},
+};
+const GRID_RADIUS_KM = 3.0;
+const MERCHANT_GEO = {
+  &quot;永辉超市(朝阳店)&quot;:[39.9905,116.4802,&quot;wangjing&quot;,4.6,5200],
+  &quot;瑞幸咖啡(望京店)&quot;:[39.9948,116.4735,&quot;wangjing&quot;,4.8,8100],
+  &quot;沃尔玛(望京店)&quot;:[39.9932,116.4680,&quot;wangjing&quot;,4.5,6300],
+  &quot;古茗(望京SOHO店)&quot;:[39.9971,116.4808,&quot;wangjing&quot;,4.4,4700],
+  &quot;喜茶(国贸店)&quot;:[39.9095,116.4610,&quot;guomao&quot;,4.7,6900],
+  &quot;罗森便利店(建国路店)&quot;:[39.9080,116.4530,&quot;guomao&quot;,4.3,3800],
+  &quot;7-Eleven(国贸店)&quot;:[39.9102,116.4575,&quot;guomao&quot;,4.4,5600],
+  &quot;全家FamilyMart(三里屯店)&quot;:[39.9370,116.4470,&quot;guomao&quot;,4.5,4900],
+  &quot;盒马鲜生(大望路店)&quot;:[39.9060,116.4750,&quot;guomao&quot;,4.7,7400],
+  &quot;奈雪的茶(朝阳大悦城店)&quot;:[39.9235,116.5180,&quot;guomao&quot;,4.6,5100],
+  &quot;星巴克(嘉里中心店)&quot;:[39.9110,116.4560,&quot;guomao&quot;,4.6,6200],
+  &quot;便利蜂(中关村店)&quot;:[39.9840,116.3130,&quot;zhongguancun&quot;,4.2,4100],
+  &quot;库迪咖啡(西二旗店)&quot;:[40.0530,116.3050,&quot;zhongguancun&quot;,4.1,3600],
+  &quot;CoCo都可(西单店)&quot;:[39.9075,116.3740,&quot;zhongguancun&quot;,4.3,4400],
+  &quot;物美超市(学院路店)&quot;:[39.9900,116.3480,&quot;wudaokou&quot;,4.3,4800],
+  &quot;蜜雪冰城(五道口店)&quot;:[39.9928,116.3372,&quot;wudaokou&quot;,4.5,9200],
+};
+function haversineKm(a1,o1,a2,o2){
+  const r=6371, p1=a1*Math.PI/180, p2=a2*Math.PI/180,
+        dp=(a2-a1)*Math.PI/180, dl=(o2-o1)*Math.PI/180;
+  const h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+  return 2*r*Math.asin(Math.sqrt(h));
+}
+function resolveGridLocal(lat,lng){
+  let best=null;
+  for(const gid in GRIDS){
+    const g=GRIDS[gid], d=haversineKm(lat,lng,g.lat,g.lng);
+    if(!best||d<best.d) best={gid,name:g.name,d};
+  }
+  return best &amp;&amp; best.d<=GRID_RADIUS_KM ? best : null;
+}
+function inGrid(m){ return !curGrid || (MERCHANT_GEO[m]&amp;&amp;MERCHANT_GEO[m][2]===curGrid); }
+function merchantRank(m, avgPlatforms, maxSales){
+  const g=MERCHANT_GEO[m], grid=GRIDS[curGrid];
+  const cov=Math.max(0,Math.min(1,0.6+(avgPlatforms-2)*0.4));
+  const sales=maxSales?g[4]/maxSales:0;
+  const km=haversineKm(g[0],g[1],grid.lat,grid.lng);
+  const decay=km<=1?1:(km<=3?1-(km-1)*0.4:0.1);
+  return {score:0.35*cov+0.25*sales+0.20*decay+0.20*g[3]/5, km:km};
+}
+let curGrid='', curGridName='';
+function renderLocState(){
+  document.getElementById('locpill').textContent = curGrid?('📍 '+curGridName+' ▾'):'📍 选择位置 ▾';
+  document.getElementById('gridchips').innerHTML =
+    `<button class=&quot;gridchip ${!curGrid?'on':''}&quot; onclick=&quot;setGrid('','')&quot;>不限位置</button>`+
+    Object.keys(GRIDS).map(id=>`<button class=&quot;gridchip ${curGrid===id?'on':''}&quot;
+      onclick=&quot;setGrid('${id}','${GRIDS[id].name}')&quot;>${GRIDS[id].name}</button>`).join('');
+}
+function setGrid(id,name){
+  curGrid=id; curGridName=name;
+  document.getElementById('locmsg').textContent='';
+  renderLocState(); toggleLocPanel(false);
+  doSearch();
+  if(document.getElementById('mq').value.trim()) searchMerchants();
+}
+function toggleLocPanel(force){
+  const p=document.getElementById('locpanel');
+  p.classList.toggle('open', typeof force==='boolean'?force:!p.classList.contains('open'));
+}
+// 点击后：显式向浏览器申请定位权限（Permissions API 预探测 + 原生授权弹窗）
+async function useMyLocation(){
+  const btn=document.getElementById('gpsbtn'), msg=document.getElementById('locmsg');
+  msg.textContent='';
+  if(!('geolocation' in navigator)){ msg.textContent='当前浏览器不支持定位，请手动选择商圈'; return; }
+  if(window.self!==window.top){
+    msg.textContent='当前为嵌入/预览页面（如本 Demo 内嵌显示），浏览器默认禁止内嵌页申请定位。请在独立标签页打开，或直接手动选择商圈 👇';
+    return;
+  }
+  if(window.isSecureContext===false){ msg.textContent='定位需要 HTTPS 安全环境，请手动选择商圈'; return; }
+  if(navigator.permissions &amp;&amp; navigator.permissions.query){
+    try{
+      const st=await navigator.permissions.query({name:'geolocation'});
+      if(st.state==='denied'){
+        msg.textContent='定位权限已被浏览器拒绝：请点击地址栏 🔒 → 允许「位置」→ 刷新重试，或手动选择商圈';
+        return;
+      }
+    }catch(e){}
+  }
+  btn.disabled=true; btn.textContent='⊕ 正在申请定位权限…';
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      btn.disabled=false; btn.textContent='⊕ 使用当前位置（GPS）';
+      const hit=resolveGridLocal(pos.coords.latitude,pos.coords.longitude);
+      if(hit){ setGrid(hit.gid,hit.name); }
+      else{ msg.textContent='当前位置不在演示服务区（网格位于北京：望京/国贸/中关村/五道口），请手动选择商圈'; }
+    },
+    err=>{
+      btn.disabled=false; btn.textContent='⊕ 使用当前位置（GPS）';
+      msg.textContent = err.code===1?'你拒绝了定位授权，请手动选择商圈（重新授权：地址栏 🔒 → 允许位置 → 刷新）'
+                       : (err.code===3?'定位超时，请重试或手动选择商圈':'定位失败，请手动选择商圈');
+    },
+    {enableHighAccuracy:false, timeout:8000, maximumAge:300000}
+  );
+}
+renderLocState();
+
+/* ===== 客户界面 ===== */
+const yuan = c => &quot;¥&quot;+(c/100).toFixed(2);
+let currentUnit = null;
+
+document.getElementById('foBox').insertAdjacentHTML('beforeend',
+  PLATFORMS.map(p=>`<label><input type=&quot;checkbox&quot; class=&quot;fo&quot; value=&quot;${p}&quot; checked onchange=&quot;recompare()&quot;> ${p}</label>`).join(''));
+
+function foSet(){
+  const s = {};
+  Array.prototype.slice.call(document.querySelectorAll('.fo:checked')).forEach(e=>{ s[e.value]=true; });
+  return s;
+}
+
+const PAGE = 20;
+let shown = 0, curHits = [], curQuery = '';
+
+function unitCard(u){
+  return `
+    <button class=&quot;unit&quot; id=&quot;card-${u.id}&quot; onclick=&quot;doCompare('${u.id}')&quot;>
+      <div class=&quot;name&quot;>${u.name}
+        <span class=&quot;tag merch&quot;>🏪 ${u.merchant}</span>
+        <span class=&quot;tag&quot;>${u.type==='made'?'现制':'瓶装'}</span>
+        <span class=&quot;tag&quot;>${u.listings.length}个平台</span>
+      </div>
+      <div class=&quot;meta&quot;>品牌：${u.brand} · 规格：${u.spec} · ${u.listings.map(l=>l.pf).join(' / ')}</div>
+    </button>`;
+}
+
+function renderPage(append){
+  const box = document.getElementById('results');
+  const next = curHits.slice(shown, shown + PAGE);
+  const cards = next.map(unitCard).join('');
+  if(append){ box.insertAdjacentHTML('beforeend', cards); }
+  else { box.innerHTML = curHits.length ? cards : '<div class=&quot;empty&quot;>没搜到，换个关键词试试～</div>'; }
+  shown += next.length;
+  // 标签使用结果集所属的查询词 curQuery，而非输入框实时值（防抖窗口内两者可能不一致）
+  document.getElementById('meta').textContent = curHits.length
+    ? `共 ${curHits.length} 个可比商品${curQuery?`（关键词：${curQuery}）`:(curGrid?`（${curGridName}内）`:'（全部商品库）')}，已显示 ${shown} 个` : '';
+  document.getElementById('more').innerHTML = shown < curHits.length
+    ? `<button class=&quot;morebtn&quot; onclick=&quot;renderPage(true)&quot;>加载更多（还有 ${curHits.length - shown} 个）</button>` : '';
+}
+
+function doSearch(){
+  curQuery = document.getElementById('q').value.trim();
+  curHits = searchUnits(curQuery).filter(u => inGrid(u.merchant));
+  shown = 0;
+  document.getElementById('detail').innerHTML = '';
+  currentUnit = null;
+  renderPage(false);
+}
+
+// 输入即搜（防抖 250ms）
+let debounceTimer = null;
+document.getElementById('q').addEventListener('input', function(){
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(function(){ doSearch(); }, 250);
+});
+
+// ===== 商户直达：本地聚合（与仓库版 /merchants 聚合 API 同构）=====
+let mqTimer = null;
+document.getElementById('mq').addEventListener('input', function(){
+  clearTimeout(mqTimer);
+  mqTimer = setTimeout(searchMerchants, 250);
+});
+
+function searchMerchants(){
+  const q = document.getElementById('mq').value.trim();
+  const box = document.getElementById('mgroups');
+  if(!q){ box.innerHTML = ''; return; }
+  const nq = norm(q);
+  const groups = {};
+  UNITS.forEach(u => {
+    if(norm(u.merchant).includes(nq) &amp;&amp; inGrid(u.merchant)){
+      (groups[u.merchant] = groups[u.merchant] || []).push(u);
+    }
+  });
+  let names = Object.keys(groups);
+  if(!names.length){
+    box.innerHTML = `<div class=&quot;empty-m&quot;>${curGrid?curGridName+'内':''}没有匹配的商户，换个名字试试～</div>`;
+    return;
+  }
+  let ranks = {};
+  if(curGrid){
+    const maxSales = Math.max.apply(null, names.map(m=>MERCHANT_GEO[m][4]));
+    names.forEach(m=>{
+      const avgP = groups[m].reduce((s,u)=>s+u.listings.length,0)/groups[m].length;
+      ranks[m] = merchantRank(m, avgP, maxSales);
+    });
+    names.sort((a,b)=> ranks[b].score - ranks[a].score);
+  } else {
+    names.sort((a,b)=> groups[b].length-groups[a].length || a.localeCompare(b));
+  }
+  box.innerHTML = names.map(m => `
+    <div class=&quot;mgroup&quot;>
+      <div class=&quot;mname&quot;>🏪 ${m}
+        ${ranks[m]?`<span class=&quot;mdist&quot;>${ranks[m].km.toFixed(2)}km · 排名分${ranks[m].score.toFixed(2)}</span>`:''}
+        <span class=&quot;mcount&quot;>${groups[m].length} 个可比商品 · 点击直接比价</span></div>
+      <div class=&quot;plist&quot;>${groups[m].map(u => `
+        <button class=&quot;pchip&quot; onclick=&quot;doCompare('${u.id}')&quot;>${u.name}<span class=&quot;pn&quot;>${u.listings.length}平台</span></button>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function compareUnit(u, qty, inc, fo){
+  const rows = u.listings.map(l => computePrice(l, qty, inc, STORE_MIN_ORDER[l.m+'|'+l.pf] || 0, !!fo[l.pf]));
+  rows.sort((a,b)=> (a.orderable===b.orderable ? a.final-b.final : (a.orderable?-1:1)));
+  const ok = rows.filter(r=>r.orderable);
+  const cheapest = ok.length ? ok.reduce((m,r)=>r.final<m.final?r:m) : null;
+  const savings = ok.length>1 ? Math.max.apply(null, ok.map(r=>r.final)) - cheapest.final : null;
+  return {rows, cheapest, savings};
+}
+
+function doCompare(id){
+  const u = UNITS.find(x=>x.id===id); if(!u) return;
+  currentUnit = u;
+  document.querySelectorAll('.unit').forEach(e=>e.classList.remove('active'));
+  const card = document.getElementById('card-'+id); if(card) card.classList.add('active');
+  const qty = +document.getElementById('qty').value || 1;
+  const inc = document.getElementById('delivery').checked;
+  const fo = foSet();
+  const r = compareUnit(u, qty, inc, fo);
+  const cols = r.rows.map(x=>`
+    <div class=&quot;col ${r.cheapest&amp;&amp;x.platform===r.cheapest.platform?'best':''} ${x.orderable?'':'off'}&quot;>
+      ${r.cheapest&amp;&amp;x.platform===r.cheapest.platform?'<span class=&quot;badge&quot;>最便宜</span>':''}
+      <div class=&quot;plat&quot;>${x.platform}</div>
+      <div class=&quot;price&quot;>${x.orderable?yuan(x.final):'—'}<small>到手</small></div>
+      ${x.note?`<div class=&quot;no&quot;>${x.note}</div>`:''}
+      <div class=&quot;bd&quot;>${x.lines.map(b=>`
+        <div class=&quot;row ${b.amount<0?'minus':''} ${b.fo?'forow':''}&quot;><span>${b.fo?'🎫 ':''}${b.label}</span>
+        <span class=&quot;amt&quot;>${b.amount<0?'−':''}${yuan(Math.abs(b.amount))}</span></div>`).join('')}
+      </div>
+    </div>`).join('');
+  const foList = PLATFORMS.filter(p=>fo[p]);
+  document.getElementById('detail').innerHTML = `
+    <div class=&quot;cmp&quot;>
+      <h2>${u.name}</h2>
+      <div class=&quot;sub&quot;>🏪 ${u.merchant} · 数量 ×${qty} · ${inc?'含配送费':'不含配送费'} · ${foList.length?('首单券: '+foList.join('/')):'未启用首单券'}</div>
+      <div class=&quot;cols&quot;>${cols}</div>
+      ${r.savings? `<div class=&quot;save&quot;>✅ 选「${r.cheapest.platform}」最省，比最贵的平台省 ${yuan(r.savings)}</div>`:''}
+    </div>`;
+  recordComparison(u, qty, inc, foList, r);
+  const el = document.getElementById('detail');
+  const reduced = window.matchMedia &amp;&amp; matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try{ el.scrollIntoView({behavior: reduced?'auto':'smooth', block:'nearest'}); }catch(e){ el.scrollIntoView(false); }
+}
+function recompare(){ if(currentUnit) doCompare(currentUnit.id); }
+
+/* ===== 会话比价记录 + 导出 PDF（Demo 用浏览器打印兜底）===== */
+let compareHistory = [];
+function recordComparison(u, qty, inc, foList, r){
+  const key = `${u.id}|${qty}|${inc}|${foList.join(',')}`;
+  compareHistory = compareHistory.filter(x => x.key !== key);
+  compareHistory.push({key, name:u.name, merchant:u.merchant, qty, inc, foList, rows:r.rows, cheapest:r.cheapest, savings:r.savings});
+  const bar = document.getElementById('exportbar');
+  bar.hidden = false;
+  document.getElementById('exportcount').textContent = `已比价 ${compareHistory.length} 项，可导出为 PDF（浏览器打印→另存为 PDF）`;
+}
+function clearHistory(){ compareHistory = []; document.getElementById('exportbar').hidden = true; }
+function exportPdf(){
+  if(!compareHistory.length) return;
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const ts = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  const items = compareHistory.map((h,i)=>{
+    const rows = h.rows.map(x=>{
+      const detail = x.lines.map(b=>`${b.label}${b.amount<0?'−':''}${yuan(Math.abs(b.amount))}`).join('  ');
+      const price = x.orderable ? yuan(x.final) : '—';
+      const status = x.platform===(h.cheapest&amp;&amp;h.cheapest.platform) ? '✔最便宜' : (x.orderable?'可下单':x.note);
+      const best = h.cheapest &amp;&amp; x.platform===h.cheapest.platform;
+      return `<tr class=&quot;${best?'best':''}&quot;><td>${x.platform}</td><td>${price}</td><td>${detail}</td><td>${status}</td></tr>`;
+    }).join('');
+    const sub = `🏪 ${h.merchant} · 数量 ×${h.qty} · ${h.inc?'含配送费':'不含配送费'}${h.foList.length?(' · 首单券: '+h.foList.join('/')):''}`;
+    const save = h.savings ? `<div class=&quot;save&quot;>→ 选「${h.cheapest.platform}」最省，比最贵平台省 ${yuan(h.savings)}</div>` : '';
+    return `<div class=&quot;pitem&quot;><h2>${i+1}. ${h.name}</h2><div class=&quot;psub&quot;>${sub}</div>
+      <table><thead><tr><th>平台</th><th>到手价</th><th>明细</th><th>状态</th></tr></thead><tbody>${rows}</tbody></table>${save}</div>`;
+  }).join('');
+  document.getElementById('printarea').innerHTML =
+    `<h1>饮品比价结果</h1><div class=&quot;pmeta&quot;>导出时间：${ts}</div>`
+    + `<div class=&quot;pmeta&quot;>共 ${compareHistory.length} 项 · 阿里闪购 / 京东 / 美团 · 演示数据（Mock），非真实价格</div>${items}`;
+  window.print();
+}
+
+/* ===== 测试·报表视图 ===== */
+const SCENARIOS = [
+ {id:'S1',label:'永辉·可乐×1 三平台',q:'可乐',m:'永辉',qty:1,del:true,fo:[],expP:'阿里闪购',expF:1690},
+ {id:'S2',label:'罗森·同款可乐 商户隔离',q:'可乐',m:'罗森',qty:1,del:true,fo:[],expP:'美团',expF:1780},
+ {id:'S3',label:'可乐×2 第二件半价',q:'可乐',m:'永辉',qty:2,del:true,fo:[],expP:'美团',expF:2675},
+ {id:'S4',label:'元气森林 美团缺货',q:'元气森林',m:'永辉',qty:1,del:true,fo:[],expP:'阿里闪购',expF:2990},
+ {id:'S5',label:'瑞幸×1 起送修复·美团可下单',q:'瑞幸',m:'瑞幸',qty:1,del:true,fo:[],expP:'美团',expF:1780},
+ {id:'S6',label:'瑞幸×2 券生效',q:'瑞幸',m:'瑞幸',qty:2,del:true,fo:[],expP:'美团',expF:3560},
+ {id:'S7',label:'可乐 不含配送',q:'可乐',m:'永辉',qty:1,del:false,fo:[],expP:'京东',expF:1190},
+ {id:'S8',label:'首单券全开·美团门槛未达',q:'可乐',m:'永辉',qty:1,del:true,fo:PLATFORMS,expP:'阿里闪购',expF:1290},
+ {id:'S9',label:'首单券×2件·美团反超',q:'可乐',m:'永辉',qty:2,del:true,fo:PLATFORMS,expP:'美团',expF:2175},
+ {id:'S10',label:'喜茶×1 商户级起送¥26拦截',q:'多肉葡萄',m:'喜茶',qty:1,del:true,fo:[],expP:'阿里闪购',expF:2600},
+];
+
+function runReport(){
+  let pass = 0;
+  const rows = SCENARIOS.map(s=>{
+    const u = searchUnits(s.q).find(x=>x.merchant.indexOf(s.m)>=0);
+    const fo = {}; s.fo.forEach(p=>{fo[p]=true;});
+    const r = compareUnit(u, s.qty, s.del, fo);
+    const actP = r.cheapest ? r.cheapest.platform : '—';
+    const actF = r.cheapest ? r.cheapest.final : null;
+    const ok = actP===s.expP &amp;&amp; actF===s.expF;
+    if(ok) pass++;
+    return `<tr><td><b>${s.id}</b></td><td>${s.label}</td>
+      <td>×${s.qty}${s.del?'':'·不含配送'}${s.fo.length?'·🎫':''}</td>
+      <td>${s.expP}</td><td>${actP}</td>
+      <td class=&quot;num&quot;>${yuan(s.expF)}</td><td class=&quot;num&quot;>${actF!=null?yuan(actF):'—'}</td>
+      <td class=&quot;${ok?'pass':'fail'}&quot;>${ok?'PASS':'FAIL'}</td></tr>`;
+  });
+  document.getElementById('report').innerHTML = rows.join('');
+  document.getElementById('stats').innerHTML = `
+    <div class=&quot;stat&quot;><div class=&quot;v&quot;>${UNITS.length}</div><div class=&quot;k&quot;>可比单元</div></div>
+    <div class=&quot;stat&quot;><div class=&quot;v&quot;>${LISTINGS.length}</div><div class=&quot;k&quot;>平台条目</div></div>
+    <div class=&quot;stat ok&quot;><div class=&quot;v&quot;>${pass}/${SCENARIOS.length}</div><div class=&quot;k&quot;>场景通过</div></div>
+    <div class=&quot;stat ok&quot;><div class=&quot;v&quot;>本地</div><div class=&quot;k&quot;>引擎执行</div></div>`;
+}
+
+document.getElementById('chips').innerHTML = SCENARIOS.map((s,i)=>
+  `<button class=&quot;chip&quot; onclick=&quot;loadScenario(${i})&quot;><b>${s.id}</b>${s.label}</button>`).join('');
+
+function loadScenario(i){
+  if(curGrid) setGrid('','');   // 场景基线为不限位置
+  const s = SCENARIOS[i];
+  document.getElementById('q').value = s.q;
+  document.getElementById('qty').value = s.qty;
+  document.getElementById('delivery').checked = s.del;
+  document.querySelectorAll('.fo').forEach(e=>{ e.checked = s.fo.indexOf(e.value)>=0; });
+  switchView('customer');
+  doSearch();
+  const hit = searchUnits(s.q).find(u=>u.merchant.indexOf(s.m)>=0);
+  if(hit) doCompare(hit.id);
+}
+
+/* ===== 视图切换 ===== */
+function switchView(v){
+  const cust = v==='customer';
+  document.getElementById('viewCustomer').classList.toggle('hidden', !cust);
+  document.getElementById('viewTest').classList.toggle('hidden', cust);
+  document.getElementById('tabC').classList.toggle('on', cust);
+  document.getElementById('tabT').classList.toggle('on', !cust);
+  if(!cust) runReport();
+}
+
+document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
+doSearch();
+</script>
+"></iframe>
+  <iframe id="f-tg" title="团购比价 Demo" srcdoc="<title>餐厅团餐 / 团购比价 · G-R1 可点击 Demo</title>
+<style>
+  :root{
+    --bg:#F7F3EE; --panel:#FFFFFF; --ink:#1C1815; --ink-soft:#6B6157;
+    --line:#E4DACE; --line-strong:#D3C6B4;
+    --accent:#D8552B; --accent-soft:#F6E3D8; --accent-ink:#9C3A18;
+    --good:#3F8A5C; --good-soft:#E1EFE6; --good-ink:#2C6A43;
+    --warn:#B8802A; --warn-soft:#F5EAD4;
+    --shadow:0 1px 2px rgba(28,24,21,.05),0 8px 24px rgba(28,24,21,.06);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#151210; --panel:#221D19; --ink:#F1EAE1; --ink-soft:#A99E90;
+      --line:#332B24; --line-strong:#453A31;
+      --accent:#F0703F; --accent-soft:#3A241A; --accent-ink:#F6A780;
+      --good:#5FB07E; --good-soft:#1E2E23; --good-ink:#8FD0A6;
+      --warn:#D9A94E; --warn-soft:#33290F;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme=&quot;light&quot;]{
+    --bg:#F7F3EE; --panel:#FFFFFF; --ink:#1C1815; --ink-soft:#6B6157;
+    --line:#E4DACE; --line-strong:#D3C6B4;
+    --accent:#D8552B; --accent-soft:#F6E3D8; --accent-ink:#9C3A18;
+    --good:#3F8A5C; --good-soft:#E1EFE6; --good-ink:#2C6A43;
+    --warn:#B8802A; --warn-soft:#F5EAD4;
+    --shadow:0 1px 2px rgba(28,24,21,.05),0 8px 24px rgba(28,24,21,.06);
+  }
+  :root[data-theme=&quot;dark&quot;]{
+    --bg:#151210; --panel:#221D19; --ink:#F1EAE1; --ink-soft:#A99E90;
+    --line:#332B24; --line-strong:#453A31;
+    --accent:#F0703F; --accent-soft:#3A241A; --accent-ink:#F6A780;
+    --good:#5FB07E; --good-soft:#1E2E23; --good-ink:#8FD0A6;
+    --warn:#D9A94E; --warn-soft:#33290F;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,Segoe UI,Roboto,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px; margin:0 auto; padding:28px 20px 64px}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  header.hd{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:6px}
+  .brandmark{display:flex; align-items:center; gap:11px}
+  .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,var(--accent),#B23C16);
+    display:grid;place-items:center;color:#fff;font-size:19px;box-shadow:var(--shadow);flex:0 0 auto}
+  h1{font-size:20px; margin:0; letter-spacing:-.01em; text-wrap:balance; font-weight:700}
+  .sub{color:var(--ink-soft); font-size:12.5px; margin-top:1px}
+  .themebtn{flex:0 0 auto;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink-soft);
+    border-radius:9px;padding:7px 11px;font-size:12px;cursor:pointer;font-family:inherit}
+  .themebtn:hover{color:var(--ink)}
+
+  .mock{display:flex;gap:9px;align-items:center;background:var(--accent-soft);color:var(--accent-ink);
+    border:1px solid color-mix(in srgb,var(--accent) 26%,transparent);border-radius:11px;
+    padding:9px 13px;font-size:12.5px;margin:16px 0 22px;font-weight:600}
+  .mock b{font-weight:700}
+
+  .bar{display:flex;flex-wrap:wrap;gap:14px 18px;align-items:flex-end;margin-bottom:18px}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+  .chips{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);border-radius:999px;
+    padding:7px 14px;font-size:13px;cursor:pointer;font-family:inherit;transition:.14s}
+  .chip:hover{border-color:var(--accent)}
+  .chip[aria-pressed=&quot;true&quot;]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .search{flex:1 1 200px;min-width:170px}
+  .search input{width:100%;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);
+    border-radius:10px;padding:10px 13px;font-size:14px;font-family:inherit}
+  .search input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+
+  .count{font-size:12.5px;color:var(--ink-soft);margin:2px 0 14px}
+
+  .cards{display:flex;flex-direction:column;gap:13px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden}
+  .chead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;
+    padding:15px 17px;cursor:pointer}
+  .chead:hover{background:color-mix(in srgb,var(--accent) 4%,var(--panel))}
+  .rest{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .rest .rn{font-weight:700;font-size:15.5px;letter-spacing:-.01em}
+  .rest .meta{font-size:12px;color:var(--ink-soft);display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .tag{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--line);
+    border-radius:6px;padding:1px 7px;font-size:11px;color:var(--ink-soft)}
+  .star{color:var(--warn)}
+  .pricemini{text-align:right;flex:0 0 auto}
+  .pricemini .pc{font-size:20px;font-weight:750;letter-spacing:-.02em;color:var(--accent-ink)}
+  .pricemini .pcl{font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em}
+  .pricemini .was{font-size:11.5px;color:var(--ink-soft);text-decoration:line-through;margin-top:2px}
+
+  .detail{border-top:1px dashed var(--line-strong);padding:0 17px;max-height:0;overflow:hidden;transition:max-height .28s ease}
+  .card.open .detail{max-height:1400px}
+  .detail-in{padding:16px 0 18px;display:flex;flex-direction:column;gap:16px}
+
+  .conf{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+    background:var(--bg);border:1px solid var(--line-strong);border-radius:999px;padding:3px 10px;align-self:flex-start;color:var(--ink-soft)}
+
+  table.br{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.br td{padding:8px 2px;border-bottom:1px solid var(--line)}
+  table.br td.r{text-align:right;font-variant-numeric:tabular-nums}
+  table.br tr.minus td.r{color:var(--good-ink)}
+  table.br tr.plus td.r{color:var(--accent-ink)}
+  table.br tr.total td{border-top:2px solid var(--line-strong);border-bottom:none;padding-top:11px;font-weight:750;font-size:15px}
+  .muted{color:var(--ink-soft)}
+
+  .percap{display:flex;justify-content:space-between;align-items:center;gap:12px;
+    background:var(--good-soft);border:1px solid color-mix(in srgb,var(--good) 30%,transparent);
+    border-radius:12px;padding:13px 15px}
+  .percap .pl{font-size:12.5px;color:var(--good-ink);font-weight:700}
+  .percap .pl small{display:block;color:var(--ink-soft);font-weight:500;font-size:11px;margin-top:2px}
+  .percap .pv{font-size:26px;font-weight:800;color:var(--good-ink);letter-spacing:-.02em}
+
+  .sect-l{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;margin-bottom:8px}
+  .menu{display:flex;flex-wrap:wrap;gap:7px}
+  .mi{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12.5px}
+  .mi .gift{color:var(--accent);font-weight:600;margin-left:4px}
+  .degrade{display:flex;gap:9px;align-items:flex-start;background:var(--warn-soft);
+    border:1px solid color-mix(in srgb,var(--warn) 34%,transparent);border-radius:10px;padding:11px 13px;font-size:12.5px}
+
+  .rules{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:12.5px}
+  .rules div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .rules .k{color:var(--ink-soft)}
+  .rules .v{font-weight:600;text-align:right}
+  .rules .warnv{color:var(--accent-ink)}
+
+  .deeplink{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;
+    border:none;border-radius:11px;padding:12px 18px;font-size:14px;font-weight:650;cursor:pointer;font-family:inherit;
+    text-decoration:none;align-self:flex-start}
+  .deeplink:hover{background:#C24A22}
+  .deeplink:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
+  .dnote{font-size:11px;color:var(--ink-soft);margin-top:6px}
+
+  .constraint{font-size:11.5px;color:var(--ink-soft);display:flex;gap:7px;align-items:flex-start;
+    border-left:3px solid var(--accent);padding:2px 0 2px 11px}
+
+  footer{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-soft);line-height:1.7}
+  footer code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:11px}
+  .empty{text-align:center;color:var(--ink-soft);padding:38px 0;font-size:14px}
+  @media (max-width:520px){ .rules{grid-template-columns:1fr} .pricemini .pc{font-size:18px} }
+</style>
+
+<div class=&quot;wrap&quot;>
+  <header class=&quot;hd&quot;>
+    <div class=&quot;brandmark&quot;>
+      <div class=&quot;logo&quot;>🍲</div>
+      <div>
+        <h1>餐厅团餐 / 团购比价</h1>
+        <div class=&quot;sub&quot;>G-R1 可点击 Demo · 同门店到手价 · 人均测算 · 使用规则透明</div>
+      </div>
+    </div>
+    <button class=&quot;themebtn&quot; id=&quot;themebtn&quot; type=&quot;button&quot;>◑ 主题</button>
+  </header>
+
+  <div class=&quot;mock&quot;>
+    <span>⚠️</span>
+    <span><b>Mock 演示数据，非真实价格。</b>当前为单平台（美团点评）G-R1；跨平台并排比价为 G-R2。</span>
+  </div>
+
+  <div class=&quot;bar&quot;>
+    <div class=&quot;field&quot;>
+      <span class=&quot;lab&quot;>用餐人数</span>
+      <div class=&quot;chips&quot; id=&quot;partychips&quot;>
+        <button class=&quot;chip&quot; data-p=&quot;0&quot; aria-pressed=&quot;true&quot; type=&quot;button&quot;>全部</button>
+        <button class=&quot;chip&quot; data-p=&quot;2&quot; aria-pressed=&quot;false&quot; type=&quot;button&quot;>2 人</button>
+        <button class=&quot;chip&quot; data-p=&quot;4&quot; aria-pressed=&quot;false&quot; type=&quot;button&quot;>4 人</button>
+        <button class=&quot;chip&quot; data-p=&quot;5&quot; aria-pressed=&quot;false&quot; type=&quot;button&quot;>5 人</button>
+      </div>
+    </div>
+    <div class=&quot;field search&quot;>
+      <span class=&quot;lab&quot;>搜索</span>
+      <input id=&quot;q&quot; type=&quot;text&quot; placeholder=&quot;餐厅名 / 菜系 / 套餐，如 火锅、烤串&quot; autocomplete=&quot;off&quot;>
+    </div>
+  </div>
+
+  <div class=&quot;count&quot; id=&quot;count&quot;></div>
+  <div class=&quot;cards&quot; id=&quot;cards&quot;></div>
+
+  <footer>
+    忠实复刻仓库 <code>app/tuangou/</code> 的 G-R1 逻辑（种子数据 / 到手价引擎 / 人均口径 / 菜品缺失降级 / 同门店约束）。
+    到手价 = 团购价 − 补贴（封顶不为负）+ 包间费；人均 = 到手价 ÷ 人数（未选取区间中值）。金额以「分」存储，展示换算「元」。
+  </footer>
+</div>
+
+<script>
+// ===== 种子数据（与 app/tuangou/seed_deals.py 一致，金额单位：分）=====
+const RESTAURANTS = {
+  r_haidilao_wj:{name:&quot;海底捞(望京店)&quot;,cuisine:&quot;火锅&quot;,grid:&quot;望京商圈&quot;,rating:4.8,avg:12000},
+  r_xibei_gm:{name:&quot;西贝莜面村(国贸店)&quot;,cuisine:&quot;正餐&quot;,grid:&quot;国贸商圈&quot;,rating:4.6,avg:8000},
+  r_fengmao_zgc:{name:&quot;丰茂烤串(中关村店)&quot;,cuisine:&quot;烧烤&quot;,grid:&quot;中关村商圈&quot;,rating:4.5,avg:7000},
+};
+const DEALS = [
+  {id:&quot;d_hdl_4p&quot;,rid:&quot;r_haidilao_wj&quot;,platform:&quot;美团点评&quot;,title:&quot;海底捞欢聚 4 人套餐&quot;,
+   party:[3,5],list:52000,group:39800,subsidy:3000,deeplink:&quot;https://dpurl.cn/mock/hdl4p?cps=BPC&quot;,
+   menu:[[&quot;番茄锅底&quot;,&quot;1 份&quot;,0],[&quot;肥牛卷&quot;,&quot;2 份&quot;,0],[&quot;虾滑&quot;,&quot;1 份&quot;,0],[&quot;时蔬拼盘&quot;,&quot;1 份&quot;,0],[&quot;小酥肉&quot;,&quot;1 份&quot;,0],[&quot;果盘&quot;,&quot;1 份&quot;,1]],
+   rule:{time:&quot;全天&quot;,reserve:true,limit:1,extra:0,stack:false,refund:&quot;随时退&quot;}},
+  {id:&quot;d_xibei_room&quot;,rid:&quot;r_xibei_gm&quot;,platform:&quot;美团点评&quot;,title:&quot;西贝家庭聚餐包间套餐（4 人）&quot;,
+   party:[4,4],list:36800,group:29800,subsidy:0,deeplink:&quot;https://dpurl.cn/mock/xibei?cps=BPC&quot;,
+   menu:[[&quot;莜面鱼鱼&quot;,&quot;1 份&quot;,0],[&quot;牛大骨&quot;,&quot;1 份&quot;,0],[&quot;羊肉串&quot;,&quot;10 串&quot;,0],[&quot;沙棘汁&quot;,&quot;1 扎&quot;,0]],
+   rule:{time:&quot;工作日 · 避开节假日&quot;,reserve:true,limit:1,extra:5000,stack:false,refund:&quot;过期退&quot;}},
+  {id:&quot;d_fengmao&quot;,rid:&quot;r_fengmao_zgc&quot;,platform:&quot;美团点评&quot;,title:&quot;丰茂烤串 3-4 人欢聚套餐&quot;,
+   party:[3,4],list:24900,group:19900,subsidy:1000,deeplink:&quot;https://dpurl.cn/mock/fengmao?cps=BPC&quot;,
+   menu:[], // 菜品明细缺失 → 降级
+   rule:{time:&quot;全天&quot;,reserve:false,limit:2,extra:0,stack:true,refund:&quot;随时退&quot;}},
+  {id:&quot;d_hdl_2p&quot;,rid:&quot;r_haidilao_wj&quot;,platform:&quot;美团点评&quot;,title:&quot;海底捞双人套餐&quot;,
+   party:[2,2],list:21800,group:16800,subsidy:20000,deeplink:&quot;https://dpurl.cn/mock/hdl2p?cps=BPC&quot;,
+   menu:[[&quot;番茄锅底&quot;,&quot;1 份&quot;,0],[&quot;肥牛卷&quot;,&quot;1 份&quot;,0],[&quot;宽粉&quot;,&quot;1 份&quot;,0]],
+   rule:{time:&quot;全天&quot;,reserve:false,limit:1,extra:0,stack:false,refund:&quot;随时退&quot;}},
+];
+
+const yuan = c => &quot;¥&quot; + (c/100).toFixed(c%100?2:0);
+const midpoint = p => Math.max(1, Math.floor((p[0]+p[1])/2));
+
+// ===== 到手价引擎（复刻 app/tuangou/pricing.py）=====
+function computeDeal(deal, party){
+  let current = deal.group;
+  const lines = [{label:&quot;团购价&quot;, amt:deal.group, kind:&quot;base&quot;}];
+  let subsidy = 0;
+  if(deal.subsidy>0){ subsidy = Math.min(deal.subsidy,current); current-=subsidy;
+    lines.push({label:&quot;平台补贴 / 神券&quot;, amt:-subsidy, kind:&quot;minus&quot;}); }
+  const extra = deal.rule.extra;
+  if(extra>0){ current+=extra; lines.push({label:&quot;包间费 / 服务费&quot;, amt:extra, kind:&quot;plus&quot;}); }
+  const people = (party &amp;&amp; party>0) ? party : midpoint(deal.party);
+  const perCap = Math.round(current/people);
+  return {final:current, subsidy, extra, people, perCap, lines,
+    hasMenu:deal.menu.length>0};
+}
+const partyMatch = (p,want)=> !want || (p[0]<=want &amp;&amp; want<=p[1]);
+
+// ===== 渲染 =====
+let state={party:0,q:&quot;&quot;};
+const cardsEl=document.getElementById(&quot;cards&quot;), countEl=document.getElementById(&quot;count&quot;);
+
+function ruleRow(k,v,warn){return `<div><span class=&quot;k&quot;>${k}</span><span class=&quot;v ${warn?'warnv':''}&quot;>${v}</span></div>`;}
+
+function render(){
+  const nq=state.q.trim().toLowerCase();
+  const hits=DEALS.filter(d=>{
+    if(!partyMatch(d.party,state.party)) return false;
+    const r=RESTAURANTS[d.rid];
+    const hay=(r.name+r.cuisine+d.title).toLowerCase();
+    return !nq || hay.includes(nq);
+  });
+  countEl.textContent = `命中 ${hits.length} 个团购套餐单元` + (state.party?`（适用 ${state.party} 人）`:&quot;&quot;) ;
+  if(!hits.length){ cardsEl.innerHTML=`<div class=&quot;empty&quot;>没有匹配的套餐，换个人数或关键词试试。</div>`; return; }
+
+  cardsEl.innerHTML = hits.map(d=>{
+    const r=RESTAURANTS[d.rid];
+    const res=computeDeal(d, state.party);
+    const menuHtml = res.hasMenu
+      ? `<div><div class=&quot;sect-l&quot;>套餐菜品</div><div class=&quot;menu&quot;>${d.menu.map(m=>`<span class=&quot;mi&quot;>${m[0]} · ${m[1]}${m[2]?'<span class=&quot;gift&quot;>赠</span>':''}</span>`).join(&quot;&quot;)}</div></div>`
+      : `<div class=&quot;degrade&quot;><span>⚠️</span><span><b>未含菜品明细</b>（数据源未授权该字段）。联盟/CPS 取数未必含套餐菜品清单——系统如实标注并降级，不假装可比菜品。</span></div>`;
+    const rows = res.lines.map(l=>{
+      const cls = l.kind===&quot;minus&quot;?&quot;minus&quot;:(l.kind===&quot;plus&quot;?&quot;plus&quot;:&quot;&quot;);
+      const val = (l.kind===&quot;minus&quot;?&quot;− &quot;+yuan(-l.amt):(l.kind===&quot;plus&quot;?&quot;+ &quot;+yuan(l.amt):yuan(l.amt)));
+      return `<tr class=&quot;${cls}&quot;><td>${l.label}</td><td class=&quot;r&quot;>${val}</td></tr>`;
+    }).join(&quot;&quot;);
+    return `
+    <div class=&quot;card&quot; data-id=&quot;${d.id}&quot;>
+      <div class=&quot;chead&quot; role=&quot;button&quot; tabindex=&quot;0&quot;>
+        <div class=&quot;rest&quot;>
+          <span class=&quot;rn&quot;>${d.title}</span>
+          <span class=&quot;meta&quot;>
+            <span class=&quot;tag&quot;>${r.name}</span>
+            <span class=&quot;tag&quot;>${r.cuisine}</span>
+            <span class=&quot;tag&quot;>📍 ${r.grid}</span>
+            <span class=&quot;star&quot;>★ ${r.rating}</span>
+            <span>· ${d.party[0]}-${d.party[1]} 人</span>
+          </span>
+        </div>
+        <div class=&quot;pricemini&quot;>
+          <div class=&quot;pc tnum&quot;>${yuan(res.perCap)}</div>
+          <div class=&quot;pcl&quot;>人均到手</div>
+          <div class=&quot;was tnum&quot;>门市 ${yuan(d.list)}</div>
+        </div>
+      </div>
+      <div class=&quot;detail&quot;><div class=&quot;detail-in&quot;>
+        <span class=&quot;conf&quot;>● 匹配置信度：单平台（${d.platform}）</span>
+
+        <table class=&quot;br&quot;>${rows}
+          <tr class=&quot;total&quot;><td>套餐到手价</td><td class=&quot;r tnum&quot;>${yuan(res.final)}</td></tr>
+        </table>
+
+        <div class=&quot;percap&quot;>
+          <div class=&quot;pl&quot;>人均到手价<small>${yuan(res.final)} ÷ ${res.people} 人${state.party?'（按所选人数）':'（人数区间中值）'}</small></div>
+          <div class=&quot;pv tnum&quot;>${yuan(res.perCap)}</div>
+        </div>
+
+        ${menuHtml}
+
+        <div>
+          <div class=&quot;sect-l&quot;>使用规则</div>
+          <div class=&quot;rules&quot;>
+            ${ruleRow(&quot;可用时段&quot;, d.rule.time, d.rule.time.includes(&quot;避开&quot;))}
+            ${ruleRow(&quot;是否需预约&quot;, d.rule.reserve?&quot;需预约&quot;:&quot;免预约&quot;, d.rule.reserve)}
+            ${ruleRow(&quot;包间/服务费&quot;, d.rule.extra?yuan(d.rule.extra):&quot;无&quot;, d.rule.extra>0)}
+            ${ruleRow(&quot;每桌可用&quot;, d.rule.limit?d.rule.limit+&quot; 张&quot;:&quot;不限&quot;)}
+            ${ruleRow(&quot;叠加代金券&quot;, d.rule.stack?&quot;可叠加&quot;:&quot;不可叠加&quot;)}
+            ${ruleRow(&quot;退款&quot;, d.rule.refund)}
+          </div>
+        </div>
+
+        <div>
+          <a class=&quot;deeplink&quot; href=&quot;${d.deeplink}&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>前往下单 ↗</a>
+          <div class=&quot;dnote&quot;>deeplink 带 CPS 参数（转化闭环）：<code style=&quot;font-size:10.5px&quot;>${d.deeplink}</code></div>
+        </div>
+
+        <div class=&quot;constraint&quot;>🔒 同门店约束：比价单元内所有套餐限定同一门店（<b>${r.name}</b>）；跨门店比价接口返回 409。</div>
+      </div></div>
+    </div>`;
+  }).join(&quot;&quot;);
+
+  cardsEl.querySelectorAll(&quot;.card&quot;).forEach(card=>{
+    const head=card.querySelector(&quot;.chead&quot;);
+    const toggle=()=>card.classList.toggle(&quot;open&quot;);
+    head.addEventListener(&quot;click&quot;,toggle);
+    head.addEventListener(&quot;keydown&quot;,e=>{ if(e.key===&quot;Enter&quot;||e.key===&quot; &quot;){e.preventDefault();toggle();} });
+  });
+}
+
+// 控件
+document.getElementById(&quot;partychips&quot;).addEventListener(&quot;click&quot;,e=>{
+  const b=e.target.closest(&quot;.chip&quot;); if(!b) return;
+  state.party=+b.dataset.p;
+  document.querySelectorAll(&quot;#partychips .chip&quot;).forEach(c=>c.setAttribute(&quot;aria-pressed&quot;, c===b));
+  render();
+});
+document.getElementById(&quot;q&quot;).addEventListener(&quot;input&quot;,e=>{ state.q=e.target.value; render(); });
+
+// 主题
+const rootEl=document.documentElement;
+document.getElementById(&quot;themebtn&quot;).addEventListener(&quot;click&quot;,()=>{
+  const cur=rootEl.getAttribute(&quot;data-theme&quot;)
+    || (matchMedia(&quot;(prefers-color-scheme:dark)&quot;).matches?&quot;dark&quot;:&quot;light&quot;);
+  rootEl.setAttribute(&quot;data-theme&quot;, cur===&quot;dark&quot;?&quot;light&quot;:&quot;dark&quot;);
+});
+
+render();
+</script>
+" hidden></iframe>
+</div>
+<script>
+  const tabs=[["t-bev","f-bev"],["t-tg","f-tg"]];
+  for(const [tid,fid] of tabs){
+    document.getElementById(tid).addEventListener("click",()=>{
+      for(const [t2,f2] of tabs){
+        document.getElementById(t2).setAttribute("aria-selected", t2===tid);
+        document.getElementById(f2).hidden = (f2!==fid);
+      }
+    });
+  }
+</script>
