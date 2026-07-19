@@ -125,7 +125,7 @@ cd android && ./gradlew assembleRelease
 
 | 阶段 | 内容 | 依赖 |
 | --- | --- | --- |
-| **M1 可跑 APK（Mock）** | 前端 API_BASE 改造 + Capacitor 装壳 + 原生定位 → 出 debug APK 连**已部署的 Mock 后端** | 后端先按部署流水线上云 |
+| **M1 可跑 APK（Mock）** | 前端 API_BASE 改造 + Capacitor 装壳 + 原生定位 → 出 debug APK 连**已部署的 Mock 后端**。**最小验证见 [安卓平板测试版方案.md](安卓平板测试版方案.md)**（Tier 0 零改动浏览器直连 / Tier 1 薄壳 APK 侧载）| 后端先按部署流水线上云 |
 | **M2 真实数据** | Mock 适配器换真实（CPS/联盟授权）+ 账户体系（P2-7）+ HTTPS 域名 + ICP 备案 | 平台授权、备案 |
 | **M3 发布** | release 签名 APK + 埋点漏斗（P2-4）接 `/metrics` + 商店资质上架 | 软著/资质 |
 
