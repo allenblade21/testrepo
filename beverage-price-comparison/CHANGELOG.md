@@ -5,6 +5,13 @@
 
 > 测试计数随版本变化（部分版本因参数化用例随数据构成收敛而下降，属正常——见 v0.4.2）。
 
+## [v0.8.1] 美团联盟真实 CPS API 接入（只差填密钥）
+- **真实联盟客户端** `app/tuangou/union_client.py`：官方网关协议完整实现——`media.meituan.com/cps_open/common/api/v1/*`、HMAC-SHA256 签名（Content-MD5 + stringToSign + S-Ca-* 请求头）、`query_coupon`（到店到餐，经纬度×1e6）、`get_referral_link`（跟单计佣 deeplink）。
+- **真实适配器** `union_adapter.py`：联盟商品券→GroupDeal 诚实映射——元→分、官方 `originalPrlice` 拼写兼容、标题解析人数档（解析不到=(1,99) 未知档）、不可售丢弃、**无菜品明细→降级标注**（ADR-011 兑现）、门店按品牌×商圈聚合（真实门店主数据映射待商家授权，P2-2）。
+- **环境变量切源**：`TUANGOU_SOURCE=union` + `MEITUAN_UNION_APPKEY/SECRET[/BASE/SID]` 即切真实数据，**失败自动回退 Mock 保活**；新增探针 `GET /api/tuangou/health`（当前源/快照/数据量）。
+- **契约仿真网关 + 端到端自动化测试**：`tests/tuangou/fake_union_gateway.py` 按同一算法**严格校验签名**；9 项集成测试（签名向量/往返/密钥错拒绝/映射/切源/坏密钥回退/网关不可达回退/默认 mock/真实冒烟 skip）。测试 152→**161 全绿 + 1 skip**。
+- **真实密钥冒烟脚本** `tools/union_smoke.py`：拿到授权后一条命令验真，通过即切。
+
 ## [v0.8.0] 团购团餐比价新垂直 · G-R1 Mock 骨架
 - **新垂直落地（G-R1）**：餐厅到店团购套餐比价，与饮品即时零售**同 App 双 Tab、下层隔离**（ADR-010）。新增 `app/tuangou/` 子模块，复用主系统适配器/Store 快照/geo/导出范式。
 - **数据模型**（金额分存储）：`Restaurant / MenuItem / UsageRule / GroupDeal / ComparableDeal`；比价边界字段 `restaurant_id`（等价饮品 merchant）。

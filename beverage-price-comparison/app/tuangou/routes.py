@@ -121,6 +121,19 @@ def compute_deal_comparison(unit: ComparableDeal, party_size: int | None = None)
 
 # ---- 接口 ------------------------------------------------------------------
 
+@router.get("/health")
+def tuangou_health():
+    """团购数据源探针：当前源（mock/union/回退）、快照时间、数据量。"""
+    return {
+        "source": deal_store.source,
+        "snapshot_at": deal_store.snapshot_at_iso,
+        "rebuilds": deal_store.rebuild_count,
+        "restaurants": len(deal_store.restaurants),
+        "deals": len(deal_store.deals),
+        "units": len(deal_store.units),
+    }
+
+
 @router.get("/restaurants")
 def restaurants(
     q: str = Query("", description="餐厅名/品牌/菜系关键词，空=全部"),

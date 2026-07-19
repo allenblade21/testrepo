@@ -130,6 +130,14 @@
 
 ---
 
+## 6.5 代码侧已就绪（v0.8.1）✅
+
+美团联盟接入的**工程侧已全部完成，只差密钥**：
+- 客户端 `app/tuangou/union_client.py`（官方签名协议 HMAC-SHA256 + query_coupon + get_referral_link）；
+- 适配器 `union_adapter.py`（元→分 / 降级 / 人数解析 / deeplink 归因）；
+- 切源：环境变量 `TUANGOU_SOURCE=union` + `MEITUAN_UNION_APPKEY/SECRET`，失败自动回退 Mock；
+- 验真：拿到密钥后 `python tools/union_smoke.py` 一条命令冒烟，通过即切。
+
 ## 7. 待官方确认清单（接入前逐条落实）
 
 1. 美团联盟 API 是否对「**比价类**」应用发放权限？频次与字段范围？
