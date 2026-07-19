@@ -1,0 +1,341 @@
+<title>餐厅团餐 / 团购比价 · G-R1 可点击 Demo</title>
+<style>
+  :root{
+    --bg:#F7F3EE; --panel:#FFFFFF; --ink:#1C1815; --ink-soft:#6B6157;
+    --line:#E4DACE; --line-strong:#D3C6B4;
+    --accent:#D8552B; --accent-soft:#F6E3D8; --accent-ink:#9C3A18;
+    --good:#3F8A5C; --good-soft:#E1EFE6; --good-ink:#2C6A43;
+    --warn:#B8802A; --warn-soft:#F5EAD4;
+    --shadow:0 1px 2px rgba(28,24,21,.05),0 8px 24px rgba(28,24,21,.06);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#151210; --panel:#221D19; --ink:#F1EAE1; --ink-soft:#A99E90;
+      --line:#332B24; --line-strong:#453A31;
+      --accent:#F0703F; --accent-soft:#3A241A; --accent-ink:#F6A780;
+      --good:#5FB07E; --good-soft:#1E2E23; --good-ink:#8FD0A6;
+      --warn:#D9A94E; --warn-soft:#33290F;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#F7F3EE; --panel:#FFFFFF; --ink:#1C1815; --ink-soft:#6B6157;
+    --line:#E4DACE; --line-strong:#D3C6B4;
+    --accent:#D8552B; --accent-soft:#F6E3D8; --accent-ink:#9C3A18;
+    --good:#3F8A5C; --good-soft:#E1EFE6; --good-ink:#2C6A43;
+    --warn:#B8802A; --warn-soft:#F5EAD4;
+    --shadow:0 1px 2px rgba(28,24,21,.05),0 8px 24px rgba(28,24,21,.06);
+  }
+  :root[data-theme="dark"]{
+    --bg:#151210; --panel:#221D19; --ink:#F1EAE1; --ink-soft:#A99E90;
+    --line:#332B24; --line-strong:#453A31;
+    --accent:#F0703F; --accent-soft:#3A241A; --accent-ink:#F6A780;
+    --good:#5FB07E; --good-soft:#1E2E23; --good-ink:#8FD0A6;
+    --warn:#D9A94E; --warn-soft:#33290F;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,Roboto,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px; margin:0 auto; padding:28px 20px 64px}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  header.hd{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:6px}
+  .brandmark{display:flex; align-items:center; gap:11px}
+  .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,var(--accent),#B23C16);
+    display:grid;place-items:center;color:#fff;font-size:19px;box-shadow:var(--shadow);flex:0 0 auto}
+  h1{font-size:20px; margin:0; letter-spacing:-.01em; text-wrap:balance; font-weight:700}
+  .sub{color:var(--ink-soft); font-size:12.5px; margin-top:1px}
+  .themebtn{flex:0 0 auto;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink-soft);
+    border-radius:9px;padding:7px 11px;font-size:12px;cursor:pointer;font-family:inherit}
+  .themebtn:hover{color:var(--ink)}
+
+  .mock{display:flex;gap:9px;align-items:center;background:var(--accent-soft);color:var(--accent-ink);
+    border:1px solid color-mix(in srgb,var(--accent) 26%,transparent);border-radius:11px;
+    padding:9px 13px;font-size:12.5px;margin:16px 0 22px;font-weight:600}
+  .mock b{font-weight:700}
+
+  .bar{display:flex;flex-wrap:wrap;gap:14px 18px;align-items:flex-end;margin-bottom:18px}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+  .chips{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);border-radius:999px;
+    padding:7px 14px;font-size:13px;cursor:pointer;font-family:inherit;transition:.14s}
+  .chip:hover{border-color:var(--accent)}
+  .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .search{flex:1 1 200px;min-width:170px}
+  .search input{width:100%;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);
+    border-radius:10px;padding:10px 13px;font-size:14px;font-family:inherit}
+  .search input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+
+  .count{font-size:12.5px;color:var(--ink-soft);margin:2px 0 14px}
+
+  .cards{display:flex;flex-direction:column;gap:13px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden}
+  .chead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;
+    padding:15px 17px;cursor:pointer}
+  .chead:hover{background:color-mix(in srgb,var(--accent) 4%,var(--panel))}
+  .rest{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .rest .rn{font-weight:700;font-size:15.5px;letter-spacing:-.01em}
+  .rest .meta{font-size:12px;color:var(--ink-soft);display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .tag{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--line);
+    border-radius:6px;padding:1px 7px;font-size:11px;color:var(--ink-soft)}
+  .star{color:var(--warn)}
+  .pricemini{text-align:right;flex:0 0 auto}
+  .pricemini .pc{font-size:20px;font-weight:750;letter-spacing:-.02em;color:var(--accent-ink)}
+  .pricemini .pcl{font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em}
+  .pricemini .was{font-size:11.5px;color:var(--ink-soft);text-decoration:line-through;margin-top:2px}
+
+  .detail{border-top:1px dashed var(--line-strong);padding:0 17px;max-height:0;overflow:hidden;transition:max-height .28s ease}
+  .card.open .detail{max-height:1400px}
+  .detail-in{padding:16px 0 18px;display:flex;flex-direction:column;gap:16px}
+
+  .conf{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+    background:var(--bg);border:1px solid var(--line-strong);border-radius:999px;padding:3px 10px;align-self:flex-start;color:var(--ink-soft)}
+
+  table.br{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.br td{padding:8px 2px;border-bottom:1px solid var(--line)}
+  table.br td.r{text-align:right;font-variant-numeric:tabular-nums}
+  table.br tr.minus td.r{color:var(--good-ink)}
+  table.br tr.plus td.r{color:var(--accent-ink)}
+  table.br tr.total td{border-top:2px solid var(--line-strong);border-bottom:none;padding-top:11px;font-weight:750;font-size:15px}
+  .muted{color:var(--ink-soft)}
+
+  .percap{display:flex;justify-content:space-between;align-items:center;gap:12px;
+    background:var(--good-soft);border:1px solid color-mix(in srgb,var(--good) 30%,transparent);
+    border-radius:12px;padding:13px 15px}
+  .percap .pl{font-size:12.5px;color:var(--good-ink);font-weight:700}
+  .percap .pl small{display:block;color:var(--ink-soft);font-weight:500;font-size:11px;margin-top:2px}
+  .percap .pv{font-size:26px;font-weight:800;color:var(--good-ink);letter-spacing:-.02em}
+
+  .sect-l{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;margin-bottom:8px}
+  .menu{display:flex;flex-wrap:wrap;gap:7px}
+  .mi{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12.5px}
+  .mi .gift{color:var(--accent);font-weight:600;margin-left:4px}
+  .degrade{display:flex;gap:9px;align-items:flex-start;background:var(--warn-soft);
+    border:1px solid color-mix(in srgb,var(--warn) 34%,transparent);border-radius:10px;padding:11px 13px;font-size:12.5px}
+
+  .rules{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:12.5px}
+  .rules div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .rules .k{color:var(--ink-soft)}
+  .rules .v{font-weight:600;text-align:right}
+  .rules .warnv{color:var(--accent-ink)}
+
+  .deeplink{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;
+    border:none;border-radius:11px;padding:12px 18px;font-size:14px;font-weight:650;cursor:pointer;font-family:inherit;
+    text-decoration:none;align-self:flex-start}
+  .deeplink:hover{background:#C24A22}
+  .deeplink:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
+  .dnote{font-size:11px;color:var(--ink-soft);margin-top:6px}
+
+  .constraint{font-size:11.5px;color:var(--ink-soft);display:flex;gap:7px;align-items:flex-start;
+    border-left:3px solid var(--accent);padding:2px 0 2px 11px}
+
+  footer{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-soft);line-height:1.7}
+  footer code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:11px}
+  .empty{text-align:center;color:var(--ink-soft);padding:38px 0;font-size:14px}
+  @media (max-width:520px){ .rules{grid-template-columns:1fr} .pricemini .pc{font-size:18px} }
+</style>
+
+<div class="wrap">
+  <header class="hd">
+    <div class="brandmark">
+      <div class="logo">🍲</div>
+      <div>
+        <h1>餐厅团餐 / 团购比价</h1>
+        <div class="sub">G-R1 可点击 Demo · 同门店到手价 · 人均测算 · 使用规则透明</div>
+      </div>
+    </div>
+    <button class="themebtn" id="themebtn" type="button">◑ 主题</button>
+  </header>
+
+  <div class="mock">
+    <span>⚠️</span>
+    <span><b>Mock 演示数据，非真实价格。</b>当前为单平台（美团点评）G-R1；跨平台并排比价为 G-R2。</span>
+  </div>
+
+  <div class="bar">
+    <div class="field">
+      <span class="lab">用餐人数</span>
+      <div class="chips" id="partychips">
+        <button class="chip" data-p="0" aria-pressed="true" type="button">全部</button>
+        <button class="chip" data-p="2" aria-pressed="false" type="button">2 人</button>
+        <button class="chip" data-p="4" aria-pressed="false" type="button">4 人</button>
+        <button class="chip" data-p="5" aria-pressed="false" type="button">5 人</button>
+      </div>
+    </div>
+    <div class="field search">
+      <span class="lab">搜索</span>
+      <input id="q" type="text" placeholder="餐厅名 / 菜系 / 套餐，如 火锅、烤串" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="count" id="count"></div>
+  <div class="cards" id="cards"></div>
+
+  <footer>
+    忠实复刻仓库 <code>app/tuangou/</code> 的 G-R1 逻辑（种子数据 / 到手价引擎 / 人均口径 / 菜品缺失降级 / 同门店约束）。
+    到手价 = 团购价 − 补贴（封顶不为负）+ 包间费；人均 = 到手价 ÷ 人数（未选取区间中值）。金额以「分」存储，展示换算「元」。
+  </footer>
+</div>
+
+<script>
+// ===== 种子数据（与 app/tuangou/seed_deals.py 一致，金额单位：分）=====
+const RESTAURANTS = {
+  r_haidilao_wj:{name:"海底捞(望京店)",cuisine:"火锅",grid:"望京商圈",rating:4.8,avg:12000},
+  r_xibei_gm:{name:"西贝莜面村(国贸店)",cuisine:"正餐",grid:"国贸商圈",rating:4.6,avg:8000},
+  r_fengmao_zgc:{name:"丰茂烤串(中关村店)",cuisine:"烧烤",grid:"中关村商圈",rating:4.5,avg:7000},
+};
+const DEALS = [
+  {id:"d_hdl_4p",rid:"r_haidilao_wj",platform:"美团点评",title:"海底捞欢聚 4 人套餐",
+   party:[3,5],list:52000,group:39800,subsidy:3000,deeplink:"https://dpurl.cn/mock/hdl4p?cps=BPC",
+   menu:[["番茄锅底","1 份",0],["肥牛卷","2 份",0],["虾滑","1 份",0],["时蔬拼盘","1 份",0],["小酥肉","1 份",0],["果盘","1 份",1]],
+   rule:{time:"全天",reserve:true,limit:1,extra:0,stack:false,refund:"随时退"}},
+  {id:"d_xibei_room",rid:"r_xibei_gm",platform:"美团点评",title:"西贝家庭聚餐包间套餐（4 人）",
+   party:[4,4],list:36800,group:29800,subsidy:0,deeplink:"https://dpurl.cn/mock/xibei?cps=BPC",
+   menu:[["莜面鱼鱼","1 份",0],["牛大骨","1 份",0],["羊肉串","10 串",0],["沙棘汁","1 扎",0]],
+   rule:{time:"工作日 · 避开节假日",reserve:true,limit:1,extra:5000,stack:false,refund:"过期退"}},
+  {id:"d_fengmao",rid:"r_fengmao_zgc",platform:"美团点评",title:"丰茂烤串 3-4 人欢聚套餐",
+   party:[3,4],list:24900,group:19900,subsidy:1000,deeplink:"https://dpurl.cn/mock/fengmao?cps=BPC",
+   menu:[], // 菜品明细缺失 → 降级
+   rule:{time:"全天",reserve:false,limit:2,extra:0,stack:true,refund:"随时退"}},
+  {id:"d_hdl_2p",rid:"r_haidilao_wj",platform:"美团点评",title:"海底捞双人套餐",
+   party:[2,2],list:21800,group:16800,subsidy:20000,deeplink:"https://dpurl.cn/mock/hdl2p?cps=BPC",
+   menu:[["番茄锅底","1 份",0],["肥牛卷","1 份",0],["宽粉","1 份",0]],
+   rule:{time:"全天",reserve:false,limit:1,extra:0,stack:false,refund:"随时退"}},
+];
+
+const yuan = c => "¥" + (c/100).toFixed(c%100?2:0);
+const midpoint = p => Math.max(1, Math.floor((p[0]+p[1])/2));
+
+// ===== 到手价引擎（复刻 app/tuangou/pricing.py）=====
+function computeDeal(deal, party){
+  let current = deal.group;
+  const lines = [{label:"团购价", amt:deal.group, kind:"base"}];
+  let subsidy = 0;
+  if(deal.subsidy>0){ subsidy = Math.min(deal.subsidy,current); current-=subsidy;
+    lines.push({label:"平台补贴 / 神券", amt:-subsidy, kind:"minus"}); }
+  const extra = deal.rule.extra;
+  if(extra>0){ current+=extra; lines.push({label:"包间费 / 服务费", amt:extra, kind:"plus"}); }
+  const people = (party && party>0) ? party : midpoint(deal.party);
+  const perCap = Math.round(current/people);
+  return {final:current, subsidy, extra, people, perCap, lines,
+    hasMenu:deal.menu.length>0};
+}
+const partyMatch = (p,want)=> !want || (p[0]<=want && want<=p[1]);
+
+// ===== 渲染 =====
+let state={party:0,q:""};
+const cardsEl=document.getElementById("cards"), countEl=document.getElementById("count");
+
+function ruleRow(k,v,warn){return `<div><span class="k">${k}</span><span class="v ${warn?'warnv':''}">${v}</span></div>`;}
+
+function render(){
+  const nq=state.q.trim().toLowerCase();
+  const hits=DEALS.filter(d=>{
+    if(!partyMatch(d.party,state.party)) return false;
+    const r=RESTAURANTS[d.rid];
+    const hay=(r.name+r.cuisine+d.title).toLowerCase();
+    return !nq || hay.includes(nq);
+  });
+  countEl.textContent = `命中 ${hits.length} 个团购套餐单元` + (state.party?`（适用 ${state.party} 人）`:"") ;
+  if(!hits.length){ cardsEl.innerHTML=`<div class="empty">没有匹配的套餐，换个人数或关键词试试。</div>`; return; }
+
+  cardsEl.innerHTML = hits.map(d=>{
+    const r=RESTAURANTS[d.rid];
+    const res=computeDeal(d, state.party);
+    const menuHtml = res.hasMenu
+      ? `<div><div class="sect-l">套餐菜品</div><div class="menu">${d.menu.map(m=>`<span class="mi">${m[0]} · ${m[1]}${m[2]?'<span class="gift">赠</span>':''}</span>`).join("")}</div></div>`
+      : `<div class="degrade"><span>⚠️</span><span><b>未含菜品明细</b>（数据源未授权该字段）。联盟/CPS 取数未必含套餐菜品清单——系统如实标注并降级，不假装可比菜品。</span></div>`;
+    const rows = res.lines.map(l=>{
+      const cls = l.kind==="minus"?"minus":(l.kind==="plus"?"plus":"");
+      const val = (l.kind==="minus"?"− "+yuan(-l.amt):(l.kind==="plus"?"+ "+yuan(l.amt):yuan(l.amt)));
+      return `<tr class="${cls}"><td>${l.label}</td><td class="r">${val}</td></tr>`;
+    }).join("");
+    return `
+    <div class="card" data-id="${d.id}">
+      <div class="chead" role="button" tabindex="0">
+        <div class="rest">
+          <span class="rn">${d.title}</span>
+          <span class="meta">
+            <span class="tag">${r.name}</span>
+            <span class="tag">${r.cuisine}</span>
+            <span class="tag">📍 ${r.grid}</span>
+            <span class="star">★ ${r.rating}</span>
+            <span>· ${d.party[0]}-${d.party[1]} 人</span>
+          </span>
+        </div>
+        <div class="pricemini">
+          <div class="pc tnum">${yuan(res.perCap)}</div>
+          <div class="pcl">人均到手</div>
+          <div class="was tnum">门市 ${yuan(d.list)}</div>
+        </div>
+      </div>
+      <div class="detail"><div class="detail-in">
+        <span class="conf">● 匹配置信度：单平台（${d.platform}）</span>
+
+        <table class="br">${rows}
+          <tr class="total"><td>套餐到手价</td><td class="r tnum">${yuan(res.final)}</td></tr>
+        </table>
+
+        <div class="percap">
+          <div class="pl">人均到手价<small>${yuan(res.final)} ÷ ${res.people} 人${state.party?'（按所选人数）':'（人数区间中值）'}</small></div>
+          <div class="pv tnum">${yuan(res.perCap)}</div>
+        </div>
+
+        ${menuHtml}
+
+        <div>
+          <div class="sect-l">使用规则</div>
+          <div class="rules">
+            ${ruleRow("可用时段", d.rule.time, d.rule.time.includes("避开"))}
+            ${ruleRow("是否需预约", d.rule.reserve?"需预约":"免预约", d.rule.reserve)}
+            ${ruleRow("包间/服务费", d.rule.extra?yuan(d.rule.extra):"无", d.rule.extra>0)}
+            ${ruleRow("每桌可用", d.rule.limit?d.rule.limit+" 张":"不限")}
+            ${ruleRow("叠加代金券", d.rule.stack?"可叠加":"不可叠加")}
+            ${ruleRow("退款", d.rule.refund)}
+          </div>
+        </div>
+
+        <div>
+          <a class="deeplink" href="${d.deeplink}" target="_blank" rel="noopener">前往下单 ↗</a>
+          <div class="dnote">deeplink 带 CPS 参数（转化闭环）：<code style="font-size:10.5px">${d.deeplink}</code></div>
+        </div>
+
+        <div class="constraint">🔒 同门店约束：比价单元内所有套餐限定同一门店（<b>${r.name}</b>）；跨门店比价接口返回 409。</div>
+      </div></div>
+    </div>`;
+  }).join("");
+
+  cardsEl.querySelectorAll(".card").forEach(card=>{
+    const head=card.querySelector(".chead");
+    const toggle=()=>card.classList.toggle("open");
+    head.addEventListener("click",toggle);
+    head.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();toggle();} });
+  });
+}
+
+// 控件
+document.getElementById("partychips").addEventListener("click",e=>{
+  const b=e.target.closest(".chip"); if(!b) return;
+  state.party=+b.dataset.p;
+  document.querySelectorAll("#partychips .chip").forEach(c=>c.setAttribute("aria-pressed", c===b));
+  render();
+});
+document.getElementById("q").addEventListener("input",e=>{ state.q=e.target.value; render(); });
+
+// 主题
+const rootEl=document.documentElement;
+document.getElementById("themebtn").addEventListener("click",()=>{
+  const cur=rootEl.getAttribute("data-theme")
+    || (matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+  rootEl.setAttribute("data-theme", cur==="dark"?"light":"dark");
+});
+
+render();
+</script>
