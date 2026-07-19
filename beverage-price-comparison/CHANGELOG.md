@@ -5,6 +5,11 @@
 
 > 测试计数随版本变化（部分版本因参数化用例随数据构成收敛而下降，属正常——见 v0.4.2）。
 
+## [v0.8.3] CPS 边界专项测试 + 6 项边界缺陷修复
+- **边界专项** `tests/tuangou/test_cps_boundaries.py`（23 项）：金额非有限数/脏字符串、人数死档/越界、人均半数进位、API 入参非法值、脏条目隔离、非 JSON 响应，外加分页/空集/参数校验常规边界。
+- **修复 6 个实际复现的缺陷**（详见复盘）：① `yuan_to_cents(inf)` OverflowError 炸源→`isfinite` 防御；② `parse_party("0人餐")` 死档→未知档 (1,99)、上限截断 99；③ 人均银行家舍入不一致→整数半数进位（有测试锁）；④ `/compare` `party_size` 非法值 500/静默→显式校验 1~99 违者 400；⑤ 抖音脏金额炸整个 fetch→`cents_to_int` 防御、脏条目丢弃源存活；⑥ 三客户端非 JSON 200 响应→结构化 APIError(-2)。
+- 测试 170→**193 全绿 + 1 skip**，零回归。
+
 ## [v0.8.2] 抖音 + 阿里妈妈真实 CPS 接入 · 三平台跨源对齐
 - **抖音生活服务**：`douyin_client.py`（client_token OAuth 流程 + `goodlife/v1/goods/product/online/get`，金额单位**分**）+ `douyin_adapter.py`（在线商品→GroupDeal，下线丢弃、降级标注）。
 - **阿里妈妈/淘宝联盟**：`alimama_client.py`（TOP 协议 `router/rest` + **MD5 签名**(secret+排序参数+secret 大写) + `taobao.tbk.dg.material.optional`）+ `alimama_adapter.py`（元字符串→分、`//` 链接补协议、平台记「口碑」）。

@@ -7,6 +7,7 @@
 """
 from __future__ import annotations
 
+import math
 import re
 
 import geo_data
@@ -15,23 +16,50 @@ from .models import Restaurant
 
 _PARTY_RE = re.compile(r"(\d+)\s*[-~至]?\s*(\d+)?\s*人")
 
+PARTY_UNKNOWN = (1, 99)   # 未知人数档；也是合法人数上限（99）
+
 
 def yuan_to_cents(v) -> int:
-    """「元」→「分」（铁律 1）。兼容 float/str；异常返回 0。"""
+    """「元」→「分」（铁律 1）。兼容 float/str；非有限数/异常一律返回 0。
+
+    必须挡住 inf/nan：JSON 可携带 Infinity，``int(round(inf))`` 会抛
+    OverflowError 炸掉整个数据源（边界测试覆盖）。
+    """
     try:
-        return int(round(float(v) * 100))
+        f = float(v)
+        if not math.isfinite(f):
+            return 0
+        return int(round(f * 100))
+    except (TypeError, ValueError):
+        return 0
+
+
+def cents_to_int(v) -> int:
+    """已是「分」口径的字段 → 整数分。兼容 int/float/str；非法/非有限返回 0。"""
+    try:
+        f = float(v)
+        if not math.isfinite(f):
+            return 0
+        return int(round(f))
     except (TypeError, ValueError):
         return 0
 
 
 def parse_party(title: str) -> tuple[int, int]:
-    """从套餐标题解析人数档：「4 人餐」→(4,4)，「3-4人」→(3,4)，无→(1,99) 未知档。"""
+    """从套餐标题解析人数档：「4 人餐」→(4,4)，「3-4人」→(3,4)。
+
+    解析不到、或解析出无意义档位（0 人 / 超过 99 人）→ (1,99) 未知档，
+    避免出现永远匹配不到任何用户人数的「死档」。
+    """
     m = _PARTY_RE.search(title or "")
     if not m:
-        return (1, 99)
+        return PARTY_UNKNOWN
     lo = int(m.group(1))
     hi = int(m.group(2)) if m.group(2) else lo
-    return (min(lo, hi), max(lo, hi))
+    lo, hi = min(lo, hi), max(lo, hi)
+    if lo < 1 or lo > 99:
+        return PARTY_UNKNOWN
+    return (lo, min(hi, 99))
 
 
 def brand_store_id(brand: str) -> str:

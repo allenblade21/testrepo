@@ -63,7 +63,10 @@ def compute_deal_price(deal: GroupDeal, party_size: int | None = None) -> DealPr
     final_price = current
 
     people = party_size if (party_size and party_size > 0) else deal.party_midpoint
-    per_capita = round(final_price / people) if people > 0 else final_price
+    people = max(1, people)
+    # 人均取整用「半数进位」的整数运算：round() 是银行家舍入（2487.5→2488 但
+    # 2486.5→2486），金额口径必须一致进位——勿改回 round()（有边界测试锁）
+    per_capita = (2 * final_price + people) // (2 * people)
 
     note = "" if deal.has_menu_detail else "未含菜品明细（数据源未授权该字段）"
 

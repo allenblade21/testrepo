@@ -65,7 +65,11 @@ class DouyinLifeClient:
             })
         except httpx.HTTPError as e:
             raise DouyinAPIError(-1, f"网络错误: {e}") from e
-        data = (resp.json() or {}).get("data") or {}
+        try:
+            body = resp.json() or {}
+        except ValueError as e:
+            raise DouyinAPIError(-2, f"响应非 JSON: {str(e)[:80]}") from e
+        data = body.get("data") or {}
         if resp.status_code != 200 or data.get("error_code", 0) != 0 or not data.get("access_token"):
             raise DouyinAPIError(data.get("error_code", resp.status_code),
                                  data.get("description", "获取 client_token 失败"))
@@ -89,7 +93,10 @@ class DouyinLifeClient:
             raise DouyinAPIError(-1, f"网络错误: {e}") from e
         if resp.status_code != 200:
             raise DouyinAPIError(resp.status_code, f"HTTP {resp.status_code}")
-        body = resp.json() or {}
+        try:
+            body = resp.json() or {}
+        except ValueError as e:
+            raise DouyinAPIError(-2, f"响应非 JSON: {str(e)[:80]}") from e
         data = body.get("data") or {}
         code = data.get("error_code", body.get("err_no", 0))
         if code != 0:

@@ -14,7 +14,7 @@ import logging
 import geo_data
 
 from .adapters import TuangouAdapter
-from .cps_common import brand_store_id, build_brand_restaurant, parse_party
+from .cps_common import brand_store_id, build_brand_restaurant, cents_to_int, parse_party
 from .models import DOUYIN, DEAL_SET, GroupDeal, Restaurant, UsageRule
 from .douyin_client import DouyinLifeClient
 
@@ -68,9 +68,9 @@ class DouyinLifeAdapter(TuangouAdapter):
         if rid not in self._restaurants:
             self._restaurants[rid] = build_brand_restaurant(brand, self.grid_id)
 
-        # 抖音金额单位已是分
-        group_cents = int(sku.get("actual_amount") or 0)
-        list_cents = int(sku.get("origin_amount") or 0) or group_cents
+        # 抖音金额单位已是分；字段可能来的是字符串/浮点，防御解析（非法→0→丢弃）
+        group_cents = cents_to_int(sku.get("actual_amount"))
+        list_cents = cents_to_int(sku.get("origin_amount")) or group_cents
         if group_cents <= 0:
             return None
 

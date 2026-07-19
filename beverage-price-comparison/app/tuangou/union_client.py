@@ -104,7 +104,10 @@ class MeituanUnionClient:
             raise UnionAPIError(-1, f"网络错误: {e}") from e
         if resp.status_code != 200:
             raise UnionAPIError(resp.status_code, f"HTTP {resp.status_code}")
-        data = resp.json()
+        try:
+            data = resp.json()
+        except ValueError as e:  # 网关返回非 JSON（如 HTML 错误页）
+            raise UnionAPIError(-2, f"响应非 JSON: {str(e)[:80]}") from e
         if data.get("code", 0) != 0:
             raise UnionAPIError(data.get("code", -1), data.get("Message") or data.get("message", ""))
         return data

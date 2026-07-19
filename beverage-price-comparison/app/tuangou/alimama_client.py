@@ -76,7 +76,10 @@ class AlimamaClient:
             raise AlimamaAPIError(-1, f"网络错误: {e}") from e
         if resp.status_code != 200:
             raise AlimamaAPIError(resp.status_code, f"HTTP {resp.status_code}")
-        body = resp.json() or {}
+        try:
+            body = resp.json() or {}
+        except ValueError as e:
+            raise AlimamaAPIError(-2, f"响应非 JSON: {str(e)[:80]}") from e
         if "error_response" in body:
             err = body["error_response"]
             raise AlimamaAPIError(err.get("code", -1),

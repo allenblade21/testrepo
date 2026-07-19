@@ -201,13 +201,25 @@ def search(
 
 @router.post("/compare")
 def compare(payload: dict = Body(..., description='{"unit_id": "...", "party_size": 4}')):
-    """团购到手价比价：同门店逐平台算价+人均+明细+使用规则；跨门店 409。"""
+    """团购到手价比价：同门店逐平台算价+人均+明细+使用规则；跨门店 409。
+
+    party_size 合法域 1~99；缺省/null/0 视为未指定（取人数区间中值）。
+    非法值（非整数、越界）返回 400——不得静默吞掉或 500。
+    """
     unit_id = payload.get("unit_id")
     if not unit_id:
         raise HTTPException(status_code=400, detail="缺少 unit_id")
     unit = deal_store.units_by_id.get(unit_id)
     if unit is None:
         raise HTTPException(status_code=404, detail="未找到该团购套餐单元")
-    party = payload.get("party_size")
-    party = int(party) if party else None
+
+    raw = payload.get("party_size")
+    party: int | None = None
+    if raw not in (None, 0, ""):
+        try:
+            party = int(raw)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="party_size 须为 1~99 的整数")
+        if not 1 <= party <= 99:
+            raise HTTPException(status_code=400, detail="party_size 须为 1~99 的整数")
     return compute_deal_comparison(unit, party)
