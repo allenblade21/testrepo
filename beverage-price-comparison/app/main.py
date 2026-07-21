@@ -30,7 +30,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 
 from .config import settings
-from .export_pdf import build_comparison_pdf
+from .export_pdf import PDF_AVAILABLE, build_comparison_pdf
 from .geo import merchant_rank, resolve_grid
 from .matching import _normalize, search_units
 from .models import ComparableUnit, Promotion
@@ -442,6 +442,9 @@ def export_pdf(payload: dict = Body(..., description='{"items":[{"unit_id","qty"
     items 为界面累积的会话比价记录；服务端按同一算价逻辑重算，保证 PDF 与
     界面一致。文件名与页眉均带时间戳。
     """
+    if not PDF_AVAILABLE:
+        raise HTTPException(status_code=501,
+                            detail="PDF 导出在当前环境不可用（未安装 reportlab，精简部署降级）")
     items = payload.get("items") or []
     if not items:
         raise HTTPException(status_code=400, detail="没有可导出的比价结果")

@@ -1,8 +1,15 @@
-"""比价结果 PDF 导出（POST /export）测试。"""
+"""比价结果 PDF 导出（POST /export）测试。
+
+精简环境（安卓 Termux 无 reportlab）下整组 skip——该场景由
+tests/test_export_lite.py 按 501 降级断言覆盖。
+"""
+import pytest
 from fastapi.testclient import TestClient
 
-from app.export_pdf import build_comparison_pdf
+from app.export_pdf import PDF_AVAILABLE, build_comparison_pdf
 from app.main import _compute_comparison, app
+
+pytestmark = pytest.mark.skipif(not PDF_AVAILABLE, reason="精简环境无 reportlab（降级由 test_export_lite 覆盖）")
 
 client = TestClient(app)
 

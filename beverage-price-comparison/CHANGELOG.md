@@ -5,6 +5,11 @@
 
 > 测试计数随版本变化（部分版本因参数化用例随数据构成收敛而下降，属正常——见 v0.4.2）。
 
+## [v0.8.4] 安卓本地后端方案 · reportlab 改为可选依赖
+- **精简模式**：`reportlab`（C 扩展）改为**可选依赖**——缺失时服务照常启动，`POST /export` 返回 **501** 明确降级，其余接口全量可用（整机屏蔽验证通过）。安卓 Termux 等装不上 C 扩展的环境由此可跑后端。
+- **安卓本地部署**：`docs/安卓本地后端方案.md`（Termux 首选路线 + 薄壳 APK 指向 127.0.0.1 单机自包含 + 排障速查 + Chaquopy 备选）；`requirements-android.txt` 精简依赖；`tools/android_termux_run.sh` 一键 setup/start/test。
+- 测试 193→**196 全绿 + 1 skip**：新增 `test_export_lite.py`（模拟缺 reportlab：模块可导入/明确 RuntimeError/501 且其余接口不受影响）；`test_export.py` 在精简环境自动 skip。
+
 ## [v0.8.3] CPS 边界专项测试 + 6 项边界缺陷修复
 - **边界专项** `tests/tuangou/test_cps_boundaries.py`（23 项）：金额非有限数/脏字符串、人数死档/越界、人均半数进位、API 入参非法值、脏条目隔离、非 JSON 响应，外加分页/空集/参数校验常规边界。
 - **修复 6 个实际复现的缺陷**（详见复盘）：① `yuan_to_cents(inf)` OverflowError 炸源→`isfinite` 防御；② `parse_party("0人餐")` 死档→未知档 (1,99)、上限截断 99；③ 人均银行家舍入不一致→整数半数进位（有测试锁）；④ `/compare` `party_size` 非法值 500/静默→显式校验 1~99 违者 400；⑤ 抖音脏金额炸整个 fetch→`cents_to_int` 防御、脏条目丢弃源存活；⑥ 三客户端非 JSON 200 响应→结构化 APIError(-2)。

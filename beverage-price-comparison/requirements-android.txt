@@ -1,0 +1,5 @@
+# 安卓本地(Termux)精简依赖：不含 reportlab(C 扩展，PDF 导出降级为 501)
+# 与 requirements.txt 的差异见 docs/安卓本地后端方案.md
+fastapi==0.115.6
+uvicorn==0.34.0
+httpx==0.28.1

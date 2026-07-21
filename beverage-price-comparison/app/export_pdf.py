@@ -2,23 +2,34 @@
 
 用 reportlab + 内置中文 CID 字体（STSong-Light，无需外部字体文件）把一组
 比价结果渲染为带时间戳的 PDF。金额单位「分」→ 展示「元」。
+
+**reportlab 是可选依赖**（C 扩展，安卓 Termux 等环境可能装不上）：缺失时
+本模块仍可导入、服务照常启动，仅 ``/export`` 返回 501 明确降级（见
+``PDF_AVAILABLE`` 与 docs/安卓本地后端方案.md）。勿把 reportlab 的 import
+挪回模块顶层硬依赖——那会让精简环境整个后端起不来。
 """
 from __future__ import annotations
 
 import io
 
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-)
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+try:
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+    )
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-_FONT = "STSong-Light"
-pdfmetrics.registerFont(UnicodeCIDFont(_FONT))
+    PDF_AVAILABLE = True
+except ImportError:  # 精简环境（如安卓 Termux）无 reportlab：导出降级，其余全量可用
+    PDF_AVAILABLE = False
+
+if PDF_AVAILABLE:
+    _FONT = "STSong-Light"
+    pdfmetrics.registerFont(UnicodeCIDFont(_FONT))
 
 
 def _yuan(cents: int) -> str:
@@ -45,6 +56,8 @@ def build_comparison_pdf(results: list[dict], timestamp: str, price_as_of: str =
 
     results: /compare 返回结构的列表；timestamp: 展示用时间戳字符串。
     """
+    if not PDF_AVAILABLE:
+        raise RuntimeError("reportlab 未安装，PDF 导出不可用（精简环境降级）")
     st = _styles()
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4,
