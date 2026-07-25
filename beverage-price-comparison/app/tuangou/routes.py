@@ -66,6 +66,7 @@ def _unit_brief(unit: ComparableDeal) -> dict:
         "restaurant": _restaurant_brief(rest) if rest else {"id": unit.restaurant_id},
         "party_size": list(unit.party_size),
         "match_confidence": unit.match_confidence,
+        "match_note": unit.match_note,
         "platforms": [d.platform for d in unit.deals],
         "deals": [_deal_public(d) for d in unit.deals],
     }
@@ -111,6 +112,7 @@ def compute_deal_comparison(unit: ComparableDeal, party_size: int | None = None)
         "party_size": list(unit.party_size),
         "party_used": platforms[0]["people"] if platforms else None,
         "match_confidence": unit.match_confidence,
+        "match_note": unit.match_note,
         "price_as_of": deal_store.snapshot_at_iso,
         "platforms": platforms,
         "cheapest": cheapest["platform"] if cheapest else None,

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>团餐团购比价</title>
+<style>
+  :root{
+    --bg:#F7F3EE; --panel:#fff; --ink:#1C1815; --soft:#6B6157; --line:#E4DACE;
+    --accent:#D8552B; --accent-soft:#F6E3D8; --accent-ink:#9C3A18;
+    --good:#3F8A5C; --good-soft:#E1EFE6; --good-ink:#2C6A43;
+    --warn:#B8802A; --warn-soft:#F5EAD4;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.55;
+    font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:820px;margin:0 auto;padding:24px 16px 60px}
+  .tnum{font-variant-numeric:tabular-nums}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(150deg,var(--accent),#B23C16);
+    display:grid;place-items:center;color:#fff;font-size:18px;flex:0 0 auto}
+  h1{font-size:19px;margin:0}
+  .sub{color:var(--soft);font-size:12px}
+  nav{margin-left:auto;display:flex;gap:8px;font-size:12px}
+  nav a{color:var(--soft);text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:5px 10px}
+  nav a:hover{color:var(--accent);border-color:var(--accent)}
+  .mock{display:flex;gap:8px;background:var(--accent-soft);color:var(--accent-ink);font-weight:600;
+    border:1px solid #e8c4b2;border-radius:10px;padding:8px 12px;font-size:12.5px;margin:14px 0 18px}
+  .srcline{font-size:11.5px;color:var(--soft);margin:-10px 0 14px}
+  .bar{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:14px}
+  .lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);font-weight:700;display:block;margin-bottom:6px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;
+    padding:6px 13px;font-size:13px;cursor:pointer;font-family:inherit}
+  .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .search{flex:1 1 190px;min-width:160px}
+  .search input{width:100%;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+    border-radius:10px;padding:9px 12px;font-size:14px;font-family:inherit}
+  .search input:focus-visible{outline:2px solid var(--accent);border-color:var(--accent)}
+  .count{font-size:12.5px;color:var(--soft);margin-bottom:12px}
+  .cards{display:flex;flex-direction:column;gap:12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:13px;overflow:hidden;
+    box-shadow:0 1px 2px rgba(28,24,21,.05)}
+  .chead{display:flex;justify-content:space-between;gap:10px;padding:14px 15px;cursor:pointer}
+  .chead:hover{background:#fdf9f5}
+  .rn{font-weight:700;font-size:15px}
+  .meta{font-size:12px;color:var(--soft);display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;align-items:center}
+  .tag{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:11px;color:var(--soft)}
+  .conf{border-radius:999px;padding:1px 9px;font-size:11px;font-weight:700}
+  .conf.exact{background:var(--good-soft);color:var(--good-ink)}
+  .conf.fuzzy{background:var(--warn-soft);color:var(--warn)}
+  .conf.single{background:var(--bg);color:var(--soft);border:1px solid var(--line)}
+  .pmini{text-align:right;flex:0 0 auto}
+  .pmini .v{font-size:19px;font-weight:750;color:var(--accent-ink)}
+  .pmini .l{font-size:10px;color:var(--soft);text-transform:uppercase;letter-spacing:.05em}
+  .detail{border-top:1px dashed var(--line);padding:14px 15px;display:none}
+  .card.open .detail{display:block}
+  .mnote{font-size:12px;color:var(--warn);background:var(--warn-soft);border-radius:8px;padding:7px 11px;margin-bottom:12px}
+  .plat{border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:10px}
+  .plat.best{border-color:var(--good);background:var(--good-soft)}
+  .prow{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .pname{font-weight:700;font-size:14px}
+  .best-badge{color:var(--good-ink);font-size:11px;font-weight:700;background:#fff;border:1px solid var(--good);
+    border-radius:999px;padding:1px 8px;margin-left:6px}
+  .percap{font-size:18px;font-weight:800;color:var(--good-ink)}
+  .ptitle{font-size:12px;color:var(--soft);margin:2px 0 6px}
+  .bd{font-size:12px;color:var(--soft)}
+  .bd span{margin-right:10px}
+  .degrade{font-size:11.5px;color:var(--warn);margin-top:5px}
+  .rules{font-size:11.5px;color:var(--soft);margin-top:5px}
+  .go{display:inline-block;margin-top:8px;background:var(--accent);color:#fff;text-decoration:none;
+    border-radius:9px;padding:8px 14px;font-size:13px;font-weight:600}
+  .savings{font-size:12.5px;color:var(--good-ink);font-weight:600;margin-top:2px}
+  .empty{text-align:center;color:var(--soft);padding:34px 0}
+  footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--soft)}
+  @media (max-width:520px){ .pmini .v{font-size:16px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">🍲</div>
+    <div>
+      <h1>团餐团购比价</h1>
+      <div class="sub">同餐厅跨平台 · 人均到手价 · 使用规则透明</div>
+    </div>
+    <nav><a href="/">🥤 饮品</a><a href="/discover">📍 发现</a><a href="/test">🧪 测试台</a></nav>
+  </header>
+
+  <div class="mock">⚠️ <span>本页价格为 Mock 演示数据，<b>非真实价格</b>；数据源见下行探针。</span></div>
+  <div class="srcline" id="srcline">数据源加载中…</div>
+
+  <div class="bar">
+    <div>
+      <span class="lab">用餐人数</span>
+      <div class="chips" id="chips">
+        <button class="chip" data-p="0" aria-pressed="true" type="button">全部</button>
+        <button class="chip" data-p="2" aria-pressed="false" type="button">2 人</button>
+        <button class="chip" data-p="4" aria-pressed="false" type="button">4 人</button>
+        <button class="chip" data-p="6" aria-pressed="false" type="button">6 人</button>
+      </div>
+    </div>
+    <div class="search">
+      <span class="lab">搜索</span>
+      <input id="q" type="search" placeholder="餐厅 / 菜系 / 套餐，如 火锅" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="count" id="count"></div>
+  <div class="cards" id="cards"></div>
+
+  <footer>同门店约束：比价单元内所有套餐限定同一餐厅门店，跨门店拒绝比价（409）。
+    置信度：<b>精确</b>=标题相似+价位带双信号通过；<b>疑似</b>=套餐内容可能有差异，请核对；<b>单平台</b>=暂无跨平台可比。</footer>
+</div>
+
+<script>
+const yuan = c => "¥" + (c/100).toFixed(c%100?2:0);
+const state = { party: 0, q: "" };
+const els = { cards: document.getElementById("cards"), count: document.getElementById("count") };
+const confCls = c => c==="精确" ? "exact" : (c==="疑似" ? "fuzzy" : "single");
+
+fetch("/api/tuangou/health").then(r=>r.json()).then(h=>{
+  document.getElementById("srcline").textContent =
+    `数据源：${h.source} · 门店 ${h.restaurants} · 套餐 ${h.deals} · 快照 ${h.snapshot_at}`;
+}).catch(()=>{ document.getElementById("srcline").textContent = "数据源探针不可用"; });
+
+let seq = 0;
+async function load(){
+  const my = ++seq;
+  const p = new URLSearchParams({ q: state.q, limit: 50 });
+  if (state.party) p.set("party", state.party);
+  const d = await (await fetch(`/api/tuangou/search?${p}`)).json();
+  if (my !== seq) return;                       // 过期响应丢弃
+  els.count.textContent = `命中 ${d.total} 个可比套餐单元` + (state.party?`（适用 ${state.party} 人）`:"");
+  if (!d.results.length){ els.cards.innerHTML = `<div class="empty">没有匹配的套餐，换个人数或关键词试试。</div>`; return; }
+  els.cards.innerHTML = d.results.map(u => `
+    <div class="card" data-id="${u.id}">
+      <div class="chead" role="button" tabindex="0">
+        <div>
+          <div class="rn">${u.restaurant.name || u.restaurant.id}</div>
+          <div class="meta">
+            <span class="tag">${u.restaurant.cuisine || ""}</span>
+            <span>${u.party_size[0]}-${u.party_size[1]} 人</span>
+            <span class="conf ${confCls(u.match_confidence)}">${u.match_confidence}</span>
+            <span>${u.platforms.join(" · ")}</span>
+          </div>
+        </div>
+        <div class="pmini">
+          <div class="v tnum">${yuan(Math.min(...u.deals.map(x=>x.group_price)))}</div>
+          <div class="l">团购价起</div>
+        </div>
+      </div>
+      <div class="detail"><div class="dbody">点击加载比价…</div></div>
+    </div>`).join("");
+  els.cards.querySelectorAll(".card").forEach(card=>{
+    const head = card.querySelector(".chead");
+    const open = () => toggle(card);
+    head.addEventListener("click", open);
+    head.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); open(); }});
+  });
+}
+
+async function toggle(card){
+  card.classList.toggle("open");
+  if (!card.classList.contains("open") || card.dataset.loaded) return;
+  const body = card.querySelector(".dbody");
+  const payload = { unit_id: card.dataset.id };
+  if (state.party) payload.party_size = state.party;
+  const r = await fetch("/api/tuangou/compare", {
+    method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload)});
+  if (!r.ok){ body.textContent = `比价失败（HTTP ${r.status}）`; return; }
+  const d = await r.json();
+  card.dataset.loaded = "1";
+  const note = d.match_note ? `<div class="mnote">⚠️ ${d.match_note}</div>` : "";
+  const sav = d.per_capita_savings ? `<div class="savings">最优比最贵人均省 ${yuan(d.per_capita_savings)}</div>` : "";
+  body.innerHTML = note + d.platforms.map(p=>{
+    const best = p.platform === d.cheapest && d.platforms.length > 1;
+    const bd = p.breakdown.map(l=>`<span>${l.label} ${l.amount<0?"−":""}${yuan(Math.abs(l.amount))}</span>`).join("");
+    const menu = p.has_menu_detail
+      ? `<div class="rules">菜品：${p.menu_items.map(m=>m.name+"·"+m.spec).join("、")}</div>`
+      : `<div class="degrade">⚠️ 未含菜品明细（数据源未授权该字段）</div>`;
+    const rule = p.usage_rule ? `<div class="rules">时段：${(p.usage_rule.time_windows||[]).join("/")||"—"} · ${p.usage_rule.need_reserve?"需预约":"免预约"}${p.usage_rule.extra_fee_cents?` · 包间/服务费 ${yuan(p.usage_rule.extra_fee_cents)}`:""} · ${p.usage_rule.refund_policy||""}</div>` : "";
+    const link = p.deeplink ? `<a class="go" href="${p.deeplink}" target="_blank" rel="noopener">去 ${p.platform} 下单 ↗</a>` : "";
+    return `<div class="plat ${best?"best":""}">
+      <div class="prow"><span class="pname">${p.platform}${best?'<span class="best-badge">最划算</span>':""}</span>
+        <span class="percap tnum">${yuan(p.per_capita_price)}<small style="font-size:11px;font-weight:500;color:var(--soft)"> /人（${p.people}人）</small></span></div>
+      <div class="ptitle">${p.title} · 到手 ${yuan(p.final_price)}</div>
+      <div class="bd">${bd}</div>${menu}${rule}${link}
+    </div>`;
+  }).join("") + sav;
+}
+
+document.getElementById("chips").addEventListener("click", e=>{
+  const b = e.target.closest(".chip"); if(!b) return;
+  state.party = +b.dataset.p;
+  document.querySelectorAll("#chips .chip").forEach(c=>c.setAttribute("aria-pressed", c===b));
+  load();
+});
+let t = null;
+document.getElementById("q").addEventListener("input", e=>{
+  state.q = e.target.value;
+  clearTimeout(t); t = setTimeout(load, 250);
+});
+load();
+</script>
+</body>
+</html>

@@ -149,7 +149,8 @@ def test_three_sources_cross_platform_unit(monkeypatch, gateways):
     hdl_unit = next(u for u in store.units
                     if u.restaurant_id == "r_brand_海底捞" and u.party_size == (4, 4))
     assert len(hdl_unit.deals) == 3                 # 三平台对齐
-    assert hdl_unit.match_confidence == "疑似"       # 跨平台语义匹配未验真 → 如实标注
+    # G-R2 双信号：标题相似(欢聚4人餐≈欢聚4人餐代金套餐)+价位带(388~408)都过 → 精确
+    assert hdl_unit.match_confidence == "精确"
     assert {d.platform for d in hdl_unit.deals} == {"美团点评", "抖音", "口碑"}
 
 

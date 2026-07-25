@@ -117,4 +117,5 @@ class ComparableDeal:
     restaurant_id: str
     party_size: tuple[int, int]
     deals: list[GroupDeal] = field(default_factory=list)
-    match_confidence: str = "单平台"     # 精确 / 疑似 / 单平台
+    match_confidence: str = "单平台"     # 精确 / 疑似 / 单平台（G-R2 多信号判定）
+    match_note: str = ""                 # 可解释说明（疑似时必须给差异原因）

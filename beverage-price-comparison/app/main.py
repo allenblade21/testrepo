@@ -499,6 +499,12 @@ def discover_page():
     return FileResponse(os.path.join(_WEB_DIR, "discover.html"))
 
 
+@app.get("/tuangou")
+def tuangou_page():
+    """团购团餐比价界面（G-R3；数据走 /api/tuangou/*，ADR-013 分路径）。"""
+    return FileResponse(os.path.join(_WEB_DIR, "tuangou.html"))
+
+
 @app.get("/test")
 def test_console():
     return FileResponse(os.path.join(_WEB_DIR, "test.html"))
